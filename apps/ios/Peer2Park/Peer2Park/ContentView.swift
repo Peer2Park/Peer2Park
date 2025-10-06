@@ -1,23 +1,26 @@
 import SwiftUI
-import Peer2ParkNetworking
 
 struct ContentView: View {
-    @State private var status = "…"
-    private let client = APIClient(baseURL: AppConfig.apiBaseURL)
+    @StateObject private var network = NetworkService()
 
     var body: some View {
-        VStack(spacing: 12) {
-            Text("Env: \(AppConfig.environment.rawValue)")
-            Text("Base: \(AppConfig.apiBaseURL.absoluteString)").font(.footnote)
-            Text("Health: \(status)")
-            Button("Ping /health") { Task { await ping() } }
-        }.padding()
-        .task { await ping() }
-    }
+        VStack(spacing: 16) {
+            Text("Environment: \(AppConfig.environment.rawValue)")
+            Text("Base URL: \(AppConfig.apiBaseURL.absoluteString)")
+                .font(.footnote)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
 
-    @MainActor
-    private func ping() async {
-        do { status = try await client.health() }
-        catch { status = "error: \(error.localizedDescription)" }
+            Text(network.healthStatus)
+                .font(.headline)
+                .padding(.top)
+
+            Button("Ping /health") {
+                Task { await network.pingHealth() }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+        .task { await network.pingHealth() } // auto-ping on launch
     }
 }

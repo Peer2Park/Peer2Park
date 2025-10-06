@@ -4,4 +4,7 @@
    <FileRef
       location = "group:Peer2Park/Peer2Park.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:../Peer2Park (Dev).xctestplan">
+   </FileRef>
 </Workspace>
