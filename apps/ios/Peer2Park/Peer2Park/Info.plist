@@ -5,5 +5,9 @@
 	<key>API_BASE_URL</key>
 	<string>$(SRCROOT)/apps/ios/Peer2Park/Info.plist
 </string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 </dict>
 </plist>

@@ -500,6 +500,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Peer2Park/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -511,6 +513,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				NSLocationAlwaysAndWhenInUseUsageDescription = "Used for continuous spot detection while navigating.";
+				NSLocationWhenInUsageDescription = "Used to detect nearby parking spots.";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -536,6 +540,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Peer2Park/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -547,6 +553,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				NSLocationAlwaysAndWhenInUseUsageDescription = "Used for continuous spot detection while navigating.";
+				NSLocationWhenInUsageDescription = "Used to detect nearby parking spots.";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -573,6 +581,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Peer2Park/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -584,6 +594,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				NSLocationAlwaysAndWhenInUseUsageDescription = "Used for continuous spot detection while navigating.";
+				NSLocationWhenInUsageDescription = "Used to detect nearby parking spots.";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
