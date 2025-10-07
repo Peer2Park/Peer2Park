@@ -5,9 +5,15 @@ struct ContentView: View {
     @State private var status = "…"
     @StateObject private var locationManager = LocationManager()
     private let client = APIClient(baseURL: AppConfig.apiBaseURL)
-
     var body: some View {
         VStack(spacing: 12) {
+            // App Icon Image
+            Image("peer2park")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 180, height: 180)
+                .cornerRadius(16)
+            
             Text("Env: \(AppConfig.environment.rawValue)")
             Text("Base: \(AppConfig.apiBaseURL.absoluteString)").font(.footnote)
             Text("Health: \(status)")
@@ -16,6 +22,7 @@ struct ContentView: View {
             // Location permission status and button
             Text("Location Status: \(locationStatusText)")
                 .font(.caption)
+            
             
             if locationManager.status == .denied {
                 VStack(spacing: 8) {
@@ -54,4 +61,8 @@ struct ContentView: View {
         @unknown default: return "Unknown"
         }
     }
+}
+
+#Preview {
+    ContentView()
 }
