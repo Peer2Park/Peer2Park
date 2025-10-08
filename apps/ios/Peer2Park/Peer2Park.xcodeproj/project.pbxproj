@@ -498,6 +498,7 @@
 			baseConfigurationReference = 8922D8642E94506B00A2278B /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Peer2Park/Peer2Park.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Peer2Park/Preview Content\"";
@@ -505,8 +506,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Peer2Park/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We wanna use ur camera";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -537,6 +539,7 @@
 			baseConfigurationReference = 8922D8662E94507A00A2278B /* Beta.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Peer2Park/Peer2Park.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Peer2Park/Preview Content\"";
@@ -544,8 +547,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Peer2Park/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We wanna use ur camera";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -578,6 +582,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Peer2Park/Peer2Park.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Peer2Park/Preview Content\"";
@@ -585,8 +590,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Peer2Park/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We wanna use ur camera";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

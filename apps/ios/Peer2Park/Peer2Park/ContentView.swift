@@ -1,9 +1,11 @@
 import SwiftUI
 import Peer2ParkNetworking
-
+import AVFoundation
 struct ContentView: View {
     @State private var status = "…"
     @StateObject private var locationManager = LocationManager()
+    @StateObject private var cameraManager = CameraManager()
+    @State private var showLiveVideo = false
     private let client: APIClient?
     private var APITestEnabled: Bool {
         if let value = Bundle.main.infoDictionary?["API_TEST_ENABLED"] as? String {
@@ -27,58 +29,103 @@ struct ContentView: View {
         }
     }
     var body: some View {
-        
-        VStack(spacing: 12) {
-            
-            ZStack {
-                Color(.white)
-                    .ignoresSafeArea()
-                VStack(spacing: 12) {
-                    // App Icon Image
-                    Image("peer2park")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 180, height: 180)
-                        .cornerRadius(20)
-                    Text("Welcome to Parking Reimagined")
-                        .font(Font.largeTitle.bold())
-                        .multilineTextAlignment(.center)
-                    if APITestEnabled {
-                        Text("Env: \(AppConfig.environment.rawValue)")
-                        Text("Base: \(AppConfig.apiBaseURL.absoluteString)").font(.footnote)
-                        Text("Health: \(status)")
-                        Button("Ping /health") { Task { await ping() } }
-                        
-                        
-                    }
-                    // Location permission status and button
-                    Text("Location Status: \(locationStatusText)")
-                        .font(.caption)
-                    if locationManager.status == .denied {
-                        VStack(spacing: 8) {
-                            Text("Location access was denied. To enable:")
-                                .font(.caption)
-                                .foregroundColor(.orange)
-                            Button("Open Settings") {
-                                if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                                    UIApplication.shared.open(settingsUrl)
+        NavigationStack {
+            VStack(spacing: 12) {
+                ZStack {
+                    Color(.white)
+                        .ignoresSafeArea()
+                    VStack(spacing: 12) {
+                        // App Icon Image
+                        Image("peer2park")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 180, height: 180)
+                            .cornerRadius(20)
+                        Text("Welcome to Parking Reimagined")
+                            .font(Font.largeTitle.bold())
+                            .multilineTextAlignment(.center)
+                        if APITestEnabled {
+                            Text("Env: \(AppConfig.environment.rawValue)")
+                            Text("Base: \(AppConfig.apiBaseURL.absoluteString)").font(.footnote)
+                            Text("Health: \(status)")
+                        }
+                        // Bool --> good to go
+                        // Location permission status and button
+                        Text("Location Status: \(locationStatusText)")
+                            .font(.caption)
+                        if locationManager.status == .denied {
+                            VStack(spacing: 8) {
+                                Text("Location access was denied. To enable:")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                                Button("Open Settings") {
+                                    if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                                        UIApplication.shared.open(settingsUrl)
+                                    }
                                 }
+                                .foregroundColor(.blue)
                             }
-                            .foregroundColor(.blue)
                         }
-                    } else {
-                        Button("Request Location Permission") {
-                            locationManager.requestPermission()
+                        else if locationManager.status == .authorizedAlways {
                         }
-                    }
-                }.padding()
+                        else {
+                            Button("Request Location Permission") {
+                                locationManager.requestPermission()
+                            }
+                        }
+                        
+                        
+                        // Camera permission status and button
+                        Text("Camera Status: \(cameraStatusText)")
+                            .font(.caption)
+                        if cameraManager.status == .denied {
+                            VStack(spacing: 8) {
+                                Text("Camera access was denied. To enable:")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                                Button("Open Settings") {
+                                    if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                                        UIApplication.shared.open(settingsUrl)
+                                    }
+                                }
+                                .foregroundColor(.blue)
+                            }
+                        }
+                        else if cameraManager.status == .authorized {
+                            
+                        }
+                        else {
+                            Button("Request Camera Permission") {
+                                cameraManager.requestPermission()
+                            }
+                        }
+                        if permissionsApproved {
+                            Text("All permissions granted! Ready to go.")
+                                .foregroundStyle(Color.green)
+                            Button("Show Live Video") {
+                                showLiveVideo = true
+                            }
+                            .foregroundStyle(Color.blue)
+                            .padding(.top)
+                            
+                            NavigationLink(destination: UserMapView()) {
+                                Text("See Yourself on the Map")
+                                    .font(.headline)
+                                    .padding()
+                                    .background(Color.blue.opacity(0.8))
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
+                            }
+                        }
+                        
+                    }.padding()
+                }
             }
-            
-            
-                
+            .task { await ping() }
+            .navigationDestination(isPresented: $showLiveVideo) {
+                LiveVideoView()
+            }
         }
-        
-        .task { await ping() }
     }
     
     @MainActor
@@ -100,6 +147,22 @@ struct ContentView: View {
         case .authorizedAlways: return "Always"
         @unknown default: return "Unknown"
         }
+    }
+    
+    private var cameraStatusText: String {
+        switch cameraManager.status {
+        case .notDetermined: return "Not Determined"
+        case .denied: return "Denied"
+        case .authorized: return "Authorized"
+        case .restricted: return "Restricted"
+        @unknown default: return "Unknown"
+        }
+    }
+    
+    private var permissionsApproved: Bool {
+        let locationApproved = locationManager.status == .authorizedAlways || locationManager.status == .authorizedWhenInUse
+        let cameraApproved = cameraManager.status == .authorized
+        return locationApproved && cameraApproved
     }
 }
 
