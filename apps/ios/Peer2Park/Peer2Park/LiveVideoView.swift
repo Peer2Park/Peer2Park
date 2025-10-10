@@ -5,7 +5,9 @@ struct LiveVideoView: View {
     @State private var session = AVCaptureSession()
     @State private var isSessionRunning = false
     @State private var errorMessage: String? = nil
-
+    
+    
+    // MARK: - Main View Body
     var body: some View {
         ZStack {
             CameraPreview(session: session)
@@ -19,22 +21,12 @@ struct LiveVideoView: View {
                         .background(Color.white.opacity(0.8))
                         .cornerRadius(10)
                 }
-                HStack {
-                    Spacer()
-                    Button(action: stopSession) {
-                        Text("Close")
-                            .padding()
-                            .background(Color.black.opacity(0.7))
-                            .foregroundColor(.white)
-                            .clipShape(Capsule())
-                    }
-                }
             }
         }
         .onAppear(perform: startSession)
         .onDisappear(perform: stopSession)
     }
-
+    // MARK: - Session Management
     private func startSession() {
         guard !isSessionRunning else { return }
         session.beginConfiguration()
@@ -63,7 +55,7 @@ struct LiveVideoView: View {
             }
         }
     }
-
+    
     private func stopSession() {
         guard isSessionRunning else { return }
         DispatchQueue.global(qos: .userInitiated).async {
