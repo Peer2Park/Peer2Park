@@ -1,0 +1,16 @@
+
+DerivedData/
+build/
+*.xcuserstate
+*.xcuserdatad/
+*.xcscmblueprint
+
+.swiftpm/
+.build/
+Package.resolved
+node_modules/
+dist/
+.env
+.env.*
+
+.DS_Store
