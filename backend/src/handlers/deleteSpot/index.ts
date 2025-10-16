@@ -24,7 +24,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         ExpressionAttributeNames: { "#pk": PK }
       }));
 
-      return { statusCode: 204, body: "" }; // No Content
+      return { statusCode: 204, body: "Parking spot deleted!" }; // No Content
     } catch (err: any) {
       if (err.name === "ConditionalCheckFailedException") {
         return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
