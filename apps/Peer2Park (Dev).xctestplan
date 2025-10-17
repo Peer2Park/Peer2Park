@@ -1,0 +1,53 @@
+{
+  "configurations" : [
+    {
+      "id" : "5126FB40-543F-40E2-A167-4F58115181C9",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Peer2Park.xcodeproj",
+      "identifier" : "8922D8842E94558300A2278B",
+      "name" : "Peer2Park"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Peer2Park\/Peer2ParkNetworking",
+        "identifier" : "Peer2ParkNetworkingTests",
+        "name" : "Peer2ParkNetworkingTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "skippedTests" : [
+        "Peer2ParkUITests",
+        "Peer2ParkUITests\/testExample()",
+        "Peer2ParkUITests\/testLaunchPerformance()",
+        "Peer2ParkUITestsLaunchTests",
+        "Peer2ParkUITestsLaunchTests\/testLaunch()"
+      ],
+      "target" : {
+        "containerPath" : "container:Peer2Park.xcodeproj",
+        "identifier" : "8922D8982E94558400A2278B",
+        "name" : "Peer2ParkTests"
+      }
+    },
+    {
+      "enabled" : false,
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Peer2Park.xcodeproj",
+        "identifier" : "8922D8A22E94558400A2278B",
+        "name" : "Peer2ParkUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

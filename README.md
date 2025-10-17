@@ -1,3 +1,4 @@
-# Peer2Park
-Please work on personal branches
-
+- apps/ios — iOS app (SwiftUI, Xcode workspace lives here)
+- apps/server — backend (API + jobs)
+- packages/proto — shared API schemas
+- packages/sdk — generated API clients

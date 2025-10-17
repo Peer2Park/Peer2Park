@@ -1,0 +1,12 @@
+//
+//  Base.xcconfig
+//  
+//
+//  Created by Trent S on 10/6/25.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+PRODUCT_NAME = Peer2Park
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = SZGUYH243B

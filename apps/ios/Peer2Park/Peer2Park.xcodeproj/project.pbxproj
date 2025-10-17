@@ -1,0 +1,826 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8922D8C62E945BE500A2278B /* Peer2ParkNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8922D8C52E945BE500A2278B /* Peer2ParkNetworking */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8922D89A2E94558400A2278B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8922D8252E944F6600A2278B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8922D8842E94558300A2278B;
+			remoteInfo = Peer2Park;
+		};
+		8922D8A42E94558400A2278B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8922D8252E944F6600A2278B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8922D8842E94558300A2278B;
+			remoteInfo = Peer2Park;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		8922D8642E94506B00A2278B /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		8922D8662E94507A00A2278B /* Beta.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Beta.xcconfig; sourceTree = "<group>"; };
+		8922D8682E94509900A2278B /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		8922D8852E94558300A2278B /* Peer2Park.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Peer2Park.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8922D8992E94558400A2278B /* Peer2ParkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Peer2ParkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8922D8A32E94558400A2278B /* Peer2ParkUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Peer2ParkUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8907991B2E9463E200C94F26 /* Exceptions for "Peer2Park" folder in "Peer2Park" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8922D8842E94558300A2278B /* Peer2Park */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		8922D82F2E944F6600A2278B /* Peer2Park */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8907991B2E9463E200C94F26 /* Exceptions for "Peer2Park" folder in "Peer2Park" target */,
+			);
+			path = Peer2Park;
+			sourceTree = "<group>";
+		};
+		8922D8462E944F6700A2278B /* Peer2ParkTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Peer2ParkTests;
+			sourceTree = "<group>";
+		};
+		8922D8502E944F6700A2278B /* Peer2ParkUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Peer2ParkUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8922D8822E94558300A2278B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8922D8C62E945BE500A2278B /* Peer2ParkNetworking in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8922D8962E94558400A2278B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8922D8A02E94558400A2278B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		8922D8242E944F6600A2278B = {
+			isa = PBXGroup;
+			children = (
+				8922D82F2E944F6600A2278B /* Peer2Park */,
+				8922D8462E944F6700A2278B /* Peer2ParkTests */,
+				8922D8502E944F6700A2278B /* Peer2ParkUITests */,
+				8922D82E2E944F6600A2278B /* Products */,
+				8922D8642E94506B00A2278B /* Debug.xcconfig */,
+				8922D8662E94507A00A2278B /* Beta.xcconfig */,
+				8922D8682E94509900A2278B /* Release.xcconfig */,
+				8922D8C42E945BE500A2278B /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		8922D82E2E944F6600A2278B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8922D8852E94558300A2278B /* Peer2Park.app */,
+				8922D8992E94558400A2278B /* Peer2ParkTests.xctest */,
+				8922D8A32E94558400A2278B /* Peer2ParkUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8922D8C42E945BE500A2278B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8922D8842E94558300A2278B /* Peer2Park */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8922D8AB2E94558400A2278B /* Build configuration list for PBXNativeTarget "Peer2Park" */;
+			buildPhases = (
+				8922D8812E94558300A2278B /* Sources */,
+				8922D8822E94558300A2278B /* Frameworks */,
+				8922D8832E94558300A2278B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				8922D82F2E944F6600A2278B /* Peer2Park */,
+			);
+			name = Peer2Park;
+			packageProductDependencies = (
+				8922D8C52E945BE500A2278B /* Peer2ParkNetworking */,
+			);
+			productName = Peer2Park;
+			productReference = 8922D8852E94558300A2278B /* Peer2Park.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8922D8982E94558400A2278B /* Peer2ParkTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8922D8AF2E94558400A2278B /* Build configuration list for PBXNativeTarget "Peer2ParkTests" */;
+			buildPhases = (
+				8922D8952E94558400A2278B /* Sources */,
+				8922D8962E94558400A2278B /* Frameworks */,
+				8922D8972E94558400A2278B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8922D89B2E94558400A2278B /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				8922D8462E944F6700A2278B /* Peer2ParkTests */,
+				8922D8502E944F6700A2278B /* Peer2ParkUITests */,
+			);
+			name = Peer2ParkTests;
+			packageProductDependencies = (
+			);
+			productName = Peer2ParkTests;
+			productReference = 8922D8992E94558400A2278B /* Peer2ParkTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		8922D8A22E94558400A2278B /* Peer2ParkUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8922D8B32E94558400A2278B /* Build configuration list for PBXNativeTarget "Peer2ParkUITests" */;
+			buildPhases = (
+				8922D89F2E94558400A2278B /* Sources */,
+				8922D8A02E94558400A2278B /* Frameworks */,
+				8922D8A12E94558400A2278B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8922D8A52E94558400A2278B /* PBXTargetDependency */,
+			);
+			name = Peer2ParkUITests;
+			packageProductDependencies = (
+			);
+			productName = Peer2ParkUITests;
+			productReference = 8922D8A32E94558400A2278B /* Peer2ParkUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8922D8252E944F6600A2278B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					8922D8842E94558300A2278B = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					8922D8982E94558400A2278B = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 8922D8842E94558300A2278B;
+					};
+					8922D8A22E94558400A2278B = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 8922D8842E94558300A2278B;
+					};
+				};
+			};
+			buildConfigurationList = 8922D8282E944F6600A2278B /* Build configuration list for PBXProject "Peer2Park" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 8922D8242E944F6600A2278B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 8922D82E2E944F6600A2278B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8922D8842E94558300A2278B /* Peer2Park */,
+				8922D8982E94558400A2278B /* Peer2ParkTests */,
+				8922D8A22E94558400A2278B /* Peer2ParkUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8922D8832E94558300A2278B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8922D8972E94558400A2278B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8922D8A12E94558400A2278B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8922D8812E94558300A2278B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8922D8952E94558400A2278B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8922D89F2E94558400A2278B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8922D89B2E94558400A2278B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8922D8842E94558300A2278B /* Peer2Park */;
+			targetProxy = 8922D89A2E94558400A2278B /* PBXContainerItemProxy */;
+		};
+		8922D8A52E94558400A2278B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8922D8842E94558300A2278B /* Peer2Park */;
+			targetProxy = 8922D8A42E94558400A2278B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		8922D8552E944F6700A2278B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8642E94506B00A2278B /* Debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		8922D8562E944F6700A2278B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8682E94509900A2278B /* Release.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		8922D8602E944F7B00A2278B /* Beta */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8662E94507A00A2278B /* Beta.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Beta;
+		};
+		8922D8AC2E94558400A2278B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8642E94506B00A2278B /* Debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Peer2Park/Peer2Park.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Peer2Park/Preview Content\"";
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Peer2Park/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We wanna use ur camera";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				NSLocationAlwaysAndWhenInUseUsageDescription = "Used for continuous spot detection while navigating.";
+				NSLocationWhenInUsageDescription = "Used to detect nearby parking spots.";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		8922D8AD2E94558400A2278B /* Beta */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8662E94507A00A2278B /* Beta.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Peer2Park/Peer2Park.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Peer2Park/Preview Content\"";
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Peer2Park/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We wanna use ur camera";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				NSLocationAlwaysAndWhenInUseUsageDescription = "Used for continuous spot detection while navigating.";
+				NSLocationWhenInUsageDescription = "Used to detect nearby parking spots.";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Beta;
+		};
+		8922D8AE2E94558400A2278B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8682E94509900A2278B /* Release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Peer2Park/Peer2Park.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Peer2Park/Preview Content\"";
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Peer2Park/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We wanna use ur camera";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Peer2Park uses your location to show nearby parking spots and help other users find available parking in your area.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				NSLocationAlwaysAndWhenInUseUsageDescription = "Used for continuous spot detection while navigating.";
+				NSLocationWhenInUsageDescription = "Used to detect nearby parking spots.";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		8922D8B02E94558400A2278B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8642E94506B00A2278B /* Debug.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peer2park.Peer2ParkTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Peer2Park.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Peer2Park";
+			};
+			name = Debug;
+		};
+		8922D8B12E94558400A2278B /* Beta */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8662E94507A00A2278B /* Beta.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peer2park.Peer2ParkTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Peer2Park.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Peer2Park";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Beta;
+		};
+		8922D8B22E94558400A2278B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8682E94509900A2278B /* Release.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peer2park.Peer2ParkTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Peer2Park.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Peer2Park";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		8922D8B42E94558400A2278B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8642E94506B00A2278B /* Debug.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peer2park.Peer2ParkUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Peer2Park;
+			};
+			name = Debug;
+		};
+		8922D8B52E94558400A2278B /* Beta */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8662E94507A00A2278B /* Beta.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peer2park.Peer2ParkUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Peer2Park;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Beta;
+		};
+		8922D8B62E94558400A2278B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8922D8682E94509900A2278B /* Release.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SZGUYH243B;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peer2park.Peer2ParkUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Peer2Park;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8922D8282E944F6600A2278B /* Build configuration list for PBXProject "Peer2Park" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8922D8552E944F6700A2278B /* Debug */,
+				8922D8602E944F7B00A2278B /* Beta */,
+				8922D8562E944F6700A2278B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8922D8AB2E94558400A2278B /* Build configuration list for PBXNativeTarget "Peer2Park" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8922D8AC2E94558400A2278B /* Debug */,
+				8922D8AD2E94558400A2278B /* Beta */,
+				8922D8AE2E94558400A2278B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8922D8AF2E94558400A2278B /* Build configuration list for PBXNativeTarget "Peer2ParkTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8922D8B02E94558400A2278B /* Debug */,
+				8922D8B12E94558400A2278B /* Beta */,
+				8922D8B22E94558400A2278B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8922D8B32E94558400A2278B /* Build configuration list for PBXNativeTarget "Peer2ParkUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8922D8B42E94558400A2278B /* Debug */,
+				8922D8B52E94558400A2278B /* Beta */,
+				8922D8B62E94558400A2278B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8922D8C52E945BE500A2278B /* Peer2ParkNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Peer2ParkNetworking;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 8922D8252E944F6600A2278B /* Project object */;
+}

@@ -7,3 +7,15 @@ samconfig.toml
 *.log
 
 backend/samconfig.tml
+
+DerivedData/
+build/
+*.xcuserstate
+*.xcuserdatad/
+*.xcscmblueprint
+
+.swiftpm/
+.build/
+Package.resolved
+
+.DS_Store

@@ -1,0 +1,14 @@
+//
+//  Debug.xcconfig
+//  
+//
+//  Created by Trent S on 10/6/25.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+#include "../Configs/Base.xcconfig"
+PRODUCT_BUNDLE_IDENTIFIER = com.peer2park.app.dev
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG
+API_BASE_URL = https://dev.api.peer2park.local
+ENABLE_API_TESTS = true
