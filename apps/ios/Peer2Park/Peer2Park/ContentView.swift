@@ -203,6 +203,5 @@ struct ContentView: View {
 // MARK: - Preview
 // This provides a live preview of ContentView in Xcode's canvas.
 #Preview {
-//    ContentView()
-    LiveVideoView()
+    ContentView()
 }
