@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: AWS SAM template for API + DynamoDB + Lambda (create spot)
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+    Description: Stage name
+
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      EndpointConfiguration: REGIONAL
+
+  ParkingSpotTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ParkingSpots
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: ID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ID
+          KeyType: HASH
+
+  CreateSpotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs18.x
+      CodeUri: dist/handlers/createSpot/
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ParkingSpotTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ParkingSpotTable
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /create-spot
+            Method: post
+
+  GetSpotsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs18.x
+      CodeUri: dist/handlers/getSpots/
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ParkingSpotTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ParkingSpotTable
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /spots
+            Method: get
+
+  DeleteSpotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs18.x
+      CodeUri: dist/handlers/deleteSpot/
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ParkingSpotTable
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+                - dynamodb:DescribeTable
+              Resource: !GetAtt ParkingSpotTable.Arn
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /spots/{id}
+            Method: delete
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway base URL
+    Value: !Sub "https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
+  TableName:
+    Description: Store recently detected parking spots.
+    Value: !Ref ParkingSpotTable
+  TableArn:
+    Description: DynamoDB table ARN
+    Value: !GetAtt ParkingSpotTable.Arn

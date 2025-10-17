@@ -1,3 +1,12 @@
+.aws-sam/
+dist/
+node_modules/
+samconfig.toml
+.env
+.env.*
+*.log
+
+backend/samconfig.tml
 
 DerivedData/
 build/
@@ -8,9 +17,5 @@ build/
 .swiftpm/
 .build/
 Package.resolved
-node_modules/
-dist/
-.env
-.env.*
 
 .DS_Store
