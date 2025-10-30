@@ -153,7 +153,11 @@ struct ContentView: View {
             .task { await ping() }
             // Navigation to live video view when showLiveVideo is true.
             .navigationDestination(isPresented: $showLiveVideo) {
-                LiveVideoView()
+                LiveVideoView(cameraManager: cameraManager).onAppear {
+                    // Ensure camera permission is requested when view appears.
+                    cameraManager.requestPermission()
+                }
+                
             }
         }
     }
