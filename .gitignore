@@ -19,3 +19,6 @@ build/
 Package.resolved
 
 .DS_Store
+
+backend/test.json
+backend/jwt.txt
