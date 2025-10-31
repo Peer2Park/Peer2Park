@@ -69,7 +69,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     // Require API Gateway JWT authorizer
-    const claims = event.requestContext?.authorizer?.jwt?.claims as JwtClaims | undefined;
+    const claims = event.requestContext?.authorizer?.claims as JwtClaims | undefined;
     if (!claims?.sub) {
       return json(401, { error: "Unauthorized: missing or invalid JWT claims" });
     }
@@ -91,14 +91,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // Upsert immutable-ish identity fields from claims (only if not already present)
     exprParts.push(
-      "userID = if_not_exists(userID, :uid)",
       "email = if_not_exists(email, :email)",
       "emailVerified = if_not_exists(emailVerified, :emailVerified)",
       "cognitoUsername = if_not_exists(cognitoUsername, :cogUser)",
       "tokenUse = if_not_exists(tokenUse, :tokenUse)",
       "createdAt = if_not_exists(createdAt, :created)"
     );
-    values[":uid"] = userID;
     if (email !== undefined) values[":email"] = email;
     if (emailVerified !== undefined) values[":emailVerified"] = emailVerified;
     values[":cogUser"] = cognitoUsername ?? null;

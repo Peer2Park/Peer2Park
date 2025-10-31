@@ -8,7 +8,7 @@ const baseURL = process.env.API_BASE;
 let idToken: string;
 
 test.beforeAll(async () => {
-  idToken = await getJwt("id");
+    idToken = await getJwt("id");
 });
 
 test("Makes GET request to /spots endpoint (dev)", async () => {
