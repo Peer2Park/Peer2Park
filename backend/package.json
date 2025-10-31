@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Peer2Park API to store/fetch parking spots",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json && sam build && sam validate",
