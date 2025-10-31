@@ -105,6 +105,10 @@ Resources:
         RefreshToken: days
       RefreshTokenValidity: 30
       EnableTokenRevocation: true
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
 
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
@@ -126,14 +130,14 @@ Resources:
         AllowOrigin: "'*'"
         AllowHeaders: "'Authorization,Content-Type'"
         AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      # Auth:
-      #   DefaultAuthorizer: CognitoUserPoolAuth
-      #   AddDefaultAuthorizerToCorsPreflight: false
-      #   Authorizers:
-      #     CognitoUserPoolAuth:
-      #       UserPoolArn: !GetAtt UserPool.Arn
-      #       Identity:
-      #         Header: Authorization
+      Auth:
+        DefaultAuthorizer: CognitoUserPoolAuth
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          CognitoUserPoolAuth:
+            UserPoolArn: !GetAtt UserPool.Arn
+            Identity:
+              Header: Authorization
 
   # ---------------------------
   # DynamoDB Tables

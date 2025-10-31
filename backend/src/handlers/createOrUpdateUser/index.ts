@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
@@ -77,8 +77,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const userID = claims.sub;
     const email = typeof claims.email === "string" ? claims.email : undefined;
     const emailVerified = toBool(claims.email_verified);
-    const cognitoUsername =
-      (claims["cognito:username"] as string | undefined) ?? undefined;
+    const cognitoUsername = (claims["cognito:username"] as string | undefined) ?? undefined;
 
     const body = parseBody(event.body ?? null);
 

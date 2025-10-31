@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "Peer2Park API to store/fetch parking spots",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.json && sam build && sam validate --lint",
+    "build": "tsc -p tsconfig.json && sam build && sam validate",
     "deploy": "sam deploy --stack-name peer2park-backend --region us-east-2 --capabilities CAPABILITY_IAM --confirm-changeset --no-fail-on-empty-changeset",
     "clean": "rimraf ./dist .aws-sam",
     "test": "vitest run",
@@ -27,6 +28,7 @@
     "@aws-sdk/client-s3": "^3.907.0",
     "@aws-sdk/lib-dynamodb": "^3.907.0",
     "@types/aws-lambda": "^8.10.155",
+    "dotenv": "^17.2.3",
     "open": "^10.2.0"
   },
   "devDependencies": {

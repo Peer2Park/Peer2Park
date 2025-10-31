@@ -1,13 +1,22 @@
 import { expect, test } from 'vitest'
+import { getJwt } from "./tokens-ci.js";
+import * as dotenv from "dotenv";
 
-const baseURL = "https://n7nrhon2c5.execute-api.us-east-2.amazonaws.com/dev"
+dotenv.config();
+
+const baseURL = process.env.API_BASE;
+let idToken: string;
+
+test.beforeAll(async () => {
+  idToken = await getJwt("id");
+});
 
 test("Makes DELETE request /spots/{id} endpoing (dev)", async () => {
     // First, create a spot to delete
     const createRes = await fetch(baseURL + "/create-spot", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
             latitude: 40.4237,
@@ -21,12 +30,21 @@ test("Makes DELETE request /spots/{id} endpoing (dev)", async () => {
 
     // Now, delete the created spot
     const deleteRes = await fetch(baseURL + `/spots/${spotId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${idToken}`,
+        },
     });
     expect(deleteRes.status).toBe(204);
 
     // Finally, verify the spot has been deleted
-    const getRes = await fetch(baseURL + "/spots");
+    const getRes = await fetch(baseURL + "/spots", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${idToken}`,
+        }
+    }
+    );
     expect(getRes.status).toBe(200);
     const spots = await getRes.json();
     const found = spots.find((spot: any) => spot.ID === spotId);

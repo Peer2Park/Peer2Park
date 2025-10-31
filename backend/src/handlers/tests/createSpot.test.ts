@@ -1,12 +1,22 @@
 import { expect, test } from 'vitest'
+import { getJwt } from "./tokens-ci.js";
+import * as dotenv from "dotenv";
 
-const baseURL = "https://n7nrhon2c5.execute-api.us-east-2.amazonaws.com/dev"
+dotenv.config();
+
+const baseURL = process.env.API_BASE;
+let idToken: string;
+
+test.beforeAll(async () => {
+  idToken = await getJwt("id");
+});
 
 test("Makes POST request to /spots endpoint (dev)", async () => {
+    // crate a new spot
     const res = await fetch(baseURL + "/create-spot", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
             latitude: 40.4237,
@@ -17,4 +27,14 @@ test("Makes POST request to /spots endpoint (dev)", async () => {
     const data = await res.json();
     expect(data).toHaveProperty("message", "Parking spot added!");
     expect(data).toHaveProperty("id");
+
+    // delete the created spot to clean up
+    const spotId = data.id;
+    const deleteRes = await fetch(baseURL + `/spots/${spotId}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${idToken}`,
+        },
+    });
+    expect(deleteRes.status).toBe(204);
 })
