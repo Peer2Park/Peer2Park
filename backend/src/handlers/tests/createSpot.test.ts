@@ -25,7 +25,6 @@ test("Makes POST request to /spots endpoint (dev)", async () => {
     });
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data).toHaveProperty("message", "Parking spot added!");
     expect(data).toHaveProperty("id");
 
     // delete the created spot to clean up

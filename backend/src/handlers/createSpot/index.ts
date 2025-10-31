@@ -20,7 +20,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         const spotId = randomUUID();
 
         await dynamoDBClient.send(new PutCommand({
-            TableName: "ParkingSpots",
+            TableName: process.env.TABLE_NAME,
             Item: {
                 ID: spotId,
                 Timestamp: Date.now(),
