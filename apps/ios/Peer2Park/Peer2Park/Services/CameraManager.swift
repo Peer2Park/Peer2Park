@@ -29,14 +29,16 @@ final class CameraManager: NSObject, ObservableObject {
     private var modelLoaded = false
     private var lastInferenceTime: CFTimeInterval = 0
     private let minInferenceInterval: CFTimeInterval = 1.0 / 15.0
-
+    
+    // MARK: - Initialization
     override init() {
         super.init()
         print("[CameraManager] init() – configuring session and model…")
         configureSession()
         setupVision()
     }
-
+    
+    // MARK: Setup Video
     func requestPermission() {
         print("[CameraManager] Requesting camera permission…")
         AVCaptureDevice.requestAccess(for: .video) { granted in
@@ -47,7 +49,7 @@ final class CameraManager: NSObject, ObservableObject {
             }
         }
     }
-
+    
     private func configureSession() {
         sessionQueue.async {
             self.session.beginConfiguration()
@@ -82,16 +84,29 @@ final class CameraManager: NSObject, ObservableObject {
                 self.session.addOutput(self.videoOutput)
             }
 
-            if let conn = self.videoOutput.connection(with: .video),
-               conn.isVideoOrientationSupported {
-                conn.videoOrientation = .portrait
+            if let conn = self.videoOutput.connection(with: .video) {
+                // Use the modern iOS 17 rotation-angle API when available; fall back to the older orientation API.
+                if #available(iOS 17.0, *) {
+                    // 0.0 degrees corresponds to no rotation (portrait upright). Use the supported- angle check.
+                    let portraitAngle: CGFloat = 0.0
+                    if conn.isVideoRotationAngleSupported(portraitAngle) {
+                        conn.videoRotationAngle = portraitAngle
+                    } else {
+                        // If not supported, still set a safe default angle.
+                        conn.videoRotationAngle = portraitAngle
+                    }
+                } else {
+                    if conn.isVideoOrientationSupported {
+                        conn.videoOrientation = .portrait
+                    }
+                }
             }
 
             self.session.commitConfiguration()
             print("[CameraManager] ✅ Session configured")
         }
     }
-
+    // MARK: Setup Vision
     private func setupVision() {
         sessionQueue.async {
             guard let modelURL = Bundle.main.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
