@@ -10,8 +10,8 @@ import AVFoundation // Used for camera permissions and video capture.
 struct ContentView: View {
     // MARK: - State Properties
     // 'status' tracks the API health check result.
-    @State private var status = "…"
-    
+    @StateObject private var networkService = NetworkService()
+
     // LocationManager and CameraManager are custom classes in Services/ that handle permissions.
     @StateObject private var locationManager = LocationManager()
     @StateObject private var cameraManager = CameraManager()
@@ -19,8 +19,6 @@ struct ContentView: View {
     // Controls whether the live video view is shown.
     @State private var showLiveVideo = false
     
-    // APIClient is used for network requests if API testing is enabled.
-    private let client: APIClient? //may not be initialized
     // Computed property to check if API testing is enabled from Info.plist.
     private var APITestEnabled: Bool {
         if let value = Bundle.main.infoDictionary?["API_TEST_ENABLED"] as? String {
@@ -29,21 +27,7 @@ struct ContentView: View {
         return false
     }
     
-    // The init() method sets up the API client only if API testing is enabled.
-    init() {
-        // Use a local variable to check API_TEST_ENABLED before initializing client
-        let apiTestEnabled: Bool
-        if let value = Bundle.main.infoDictionary?["API_TEST_ENABLED"] as? String {
-            apiTestEnabled = value == "YES"
-        } else {
-            apiTestEnabled = false
-        }
-        if apiTestEnabled {
-            self.client = APIClient(baseURL: AppConfig.apiBaseURL)
-        } else {
-            self.client = nil
-        }
-    }
+    
     
     // MARK: - Main View Body
     // The body property describes the UI layout using SwiftUI views.
@@ -68,10 +52,16 @@ struct ContentView: View {
                             .multilineTextAlignment(.center)
                         // Show API info if testing is enabled
                         if APITestEnabled {
-                            Text("Env: \(AppConfig.environment.rawValue)")
-                            Text("Base: \(AppConfig.apiBaseURL.absoluteString)").font(.footnote)
-                            Text("Health: \(status)")
+                            VStack(spacing: 4) {
+                                Text("Env: \(AppConfig.environment.rawValue)")
+                                Text("Base: \(AppConfig.apiBaseURL.absoluteString)").font(.footnote)
+                                Text("Health: \(networkService.healthStatus)")
+                            }
+                            .task {
+                                await networkService.pingHealth()
+                            }
                         }
+
                         //# MARK: Location Permission
                         // Location permission status and button
                         Text("Location Status: \(locationStatusText)")
@@ -149,8 +139,6 @@ struct ContentView: View {
                     }.padding()
                 }
             }
-            // .task runs the ping() function when the view appears.
-            .task { await ping() }
             // Navigation to live video view when showLiveVideo is true.
             .navigationDestination(isPresented: $showLiveVideo) {
                 LiveVideoView(cameraManager: cameraManager).onAppear {
@@ -161,18 +149,7 @@ struct ContentView: View {
             }
         }
     }
-    
-    // MARK: - API Health Check
-    // This function checks the API health and updates the status text.
-    @MainActor
-    private func ping() async {
-        guard let client = client else {
-            status = "API test disabled"
-            return
-        }
-        do { status = try await client.health() }
-        catch { status = "error: \(error.localizedDescription)" }
-    }
+
     
     // MARK: - Helper Properties
     // Returns a user-friendly string for location permission status.
