@@ -14,7 +14,8 @@ final class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObje
     @Published var status: CLAuthorizationStatus = .notDetermined
     @Published var userLocation: CLLocationCoordinate2D? = nil
     @Published var heading: CLLocationDirection? = nil
-
+    
+    // # MARK: - Initialization
     override init() {
         super.init()
         manager.delegate = self
@@ -24,7 +25,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObje
             manager.startUpdatingHeading()
         }
     }
-
+    // # MARK: - Permission Handling
     func requestPermission() {
         manager.requestAlwaysAuthorization()
     }
@@ -37,6 +38,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObje
         }
     }
 
+    // # MARK: - Location Updates
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let location = locations.last {
             userLocation = location.coordinate
