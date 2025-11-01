@@ -85,22 +85,19 @@ final class CameraManager: NSObject, ObservableObject {
             }
 
             if let conn = self.videoOutput.connection(with: .video) {
-                // Use the modern iOS 17 rotation-angle API when available; fall back to the older orientation API.
                 if #available(iOS 17.0, *) {
-                    // 0.0 degrees corresponds to no rotation (portrait upright). Use the supported- angle check.
-                    let portraitAngle: CGFloat = 0.0
+                    // 90° = portrait upright for the rear camera
+                    let portraitAngle: CGFloat = 90
                     if conn.isVideoRotationAngleSupported(portraitAngle) {
                         conn.videoRotationAngle = portraitAngle
-                    } else {
-                        // If not supported, still set a safe default angle.
-                        conn.videoRotationAngle = portraitAngle
+                        print("[CameraManager] 🎞️ Set videoRotationAngle = \(portraitAngle)")
                     }
-                } else {
-                    if conn.isVideoOrientationSupported {
-                        conn.videoOrientation = .portrait
-                    }
+                } else if conn.isVideoOrientationSupported {
+                    conn.videoOrientation = .portrait
+                    print("[CameraManager] 🎞️ Set legacy videoOrientation = portrait")
                 }
             }
+
 
             self.session.commitConfiguration()
             print("[CameraManager] ✅ Session configured")
