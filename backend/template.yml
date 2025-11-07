@@ -1,25 +1,151 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: AWS SAM template for API + DynamoDB + Lambda (create spot)
+Description: REST API + DynamoDB + Cognito (managed by SAM)
 
 Parameters:
   Stage:
     Type: String
     Default: dev
     AllowedValues: [dev, prod]
-    Description: Stage name
+
+  # Use a URI-like identifier (AWS recommends URI-style)
+  ResourceServerIdentifier:
+    Type: String
+    Default: https://parking-api
+
+  # Update these for your app (add localhost for dev)
+  CallbackUrls:
+    Type: CommaDelimitedList
+    Default: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  LogoutUrls:
+    Type: CommaDelimitedList
+    Default: "http://localhost:3000/"
+
+  # Must be unique per region (e.g., peer2park-dev-abc123)
+  HostedUiDomainPrefix:
+    Type: String
+    Default: "peer2park-dev"
+
+Globals:
+  Function:
+    Runtime: nodejs22.x   # change to nodejs22.x if your SAM/builders support it
+    Timeout: 10
+    MemorySize: 256
+    Environment:
+      Variables:
+        USERS_TABLE: !Ref UsersTable
 
 Resources:
-  MyApi:
+  # ---------------------------
+  # Cognito (User Pool + Scopes + Client + Hosted UI)
+  # ---------------------------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: !Sub "parking-${Stage}"
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      Schema:
+        - AttributeDataType: String
+          Name: email
+          Required: true
+          Mutable: true
+
+  UserPoolResourceServer:
+    Type: AWS::Cognito::UserPoolResourceServer
+    Properties:
+      UserPoolId: !Ref UserPool
+      Identifier: !Ref ResourceServerIdentifier
+      Name: "Parking API"
+      Scopes:
+        - ScopeName: users.read
+          ScopeDescription: Read user data
+        - ScopeName: users.write
+          ScopeDescription: Write user data
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn: UserPoolResourceServer
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: "parking-web"
+      GenerateSecret: false
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: ["code"]               # Authorization Code + PKCE
+      AllowedOAuthScopes:
+        - openid
+        - email
+        - profile
+        - !Sub "${ResourceServerIdentifier}/users.read"
+        - !Sub "${ResourceServerIdentifier}/users.write"
+      CallbackURLs: !Ref CallbackUrls
+      LogoutURLs: !Ref LogoutUrls
+      SupportedIdentityProviders: ["COGNITO"]
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+      RefreshTokenValidity: 30
+      EnableTokenRevocation: true
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Domain: !Ref HostedUiDomainPrefix
+      UserPoolId: !Ref UserPool
+
+  # ---------------------------
+  # REST API (Cognito authorizer)
+  # ---------------------------
+  Api:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
       EndpointConfiguration: REGIONAL
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Authorization,Content-Type'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      Auth:
+        DefaultAuthorizer: CognitoUserPoolAuth
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          CognitoUserPoolAuth:
+            UserPoolArn: !GetAtt UserPool.Arn
+            Identity:
+              Header: Authorization
 
+  # ---------------------------
+  # DynamoDB Tables
+  # ---------------------------
   ParkingSpotTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: ParkingSpots
+      TableName: !Sub "ParkingSpots"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: ID
@@ -28,11 +154,36 @@ Resources:
         - AttributeName: ID
           KeyType: HASH
 
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "Users-${Stage}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userID
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userID
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1Email
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: KEYS_ONLY
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # ---------------------------
+  # Lambdas + Routes (inherit default authorizer)
+  # ---------------------------
   CreateSpotFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.handler
-      Runtime: nodejs22.x
       CodeUri: dist/handlers/createSpot/
       Environment:
         Variables:
@@ -41,10 +192,10 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref ParkingSpotTable
       Events:
-        ApiEvent:
+        PostCreateSpot:
           Type: Api
           Properties:
-            RestApiId: !Ref MyApi
+            RestApiId: !Ref Api
             Path: /create-spot
             Method: post
 
@@ -52,7 +203,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.handler
-      Runtime: nodejs22.x
       CodeUri: dist/handlers/getSpots/
       Environment:
         Variables:
@@ -61,10 +211,10 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ParkingSpotTable
       Events:
-        ApiEvent:
+        GetSpots:
           Type: Api
           Properties:
-            RestApiId: !Ref MyApi
+            RestApiId: !Ref Api
             Path: /spots
             Method: get
 
@@ -72,7 +222,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.handler
-      Runtime: nodejs22.x
       CodeUri: dist/handlers/deleteSpot/
       Environment:
         Variables:
@@ -85,20 +234,82 @@ Resources:
                 - dynamodb:DescribeTable
               Resource: !GetAtt ParkingSpotTable.Arn
       Events:
-        ApiEvent:
+        DeleteSpot:
           Type: Api
           Properties:
-            RestApiId: !Ref MyApi
+            RestApiId: !Ref Api
             Path: /spots/{id}
             Method: delete
 
+  # Example user upsert Lambda (optional) — uses USERS_TABLE env var
+  CreateOrUpdateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      CodeUri: dist/handlers/createOrUpdateUser/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        UpsertUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /users
+            Method: post
+
+  # ---------------------------
+  # (Optional) API monetization: keys & usage plan
+  # ---------------------------
+  # ApiUsagePlan:
+  #   Type: AWS::ApiGateway::UsagePlan
+  #   Properties:
+  #     UsagePlanName: !Sub "parking-${Stage}-paid"
+  #     ApiStages:
+  #       - ApiId: !Ref Api
+  #         Stage: !Ref Stage
+  #     Throttle:
+  #       BurstLimit: 50
+  #       RateLimit: 20
+  #     Quota:
+  #       Limit: 500000
+  #       Period: MONTH
+  #
+  # PaidCustomerApiKey:
+  #   Type: AWS::ApiGateway::ApiKey
+  #   Properties:
+  #     Name: !Sub "parking-${Stage}-customer1"
+  #     Enabled: true
+  #     StageKeys:
+  #       - RestApiId: !Ref Api
+  #         StageName: !Ref Stage
+  #
+  # UsagePlanKeyBinding:
+  #   Type: AWS::ApiGateway::UsagePlanKey
+  #   Properties:
+  #     KeyId: !Ref PaidCustomerApiKey
+  #     KeyType: API_KEY
+  #     UsagePlanId: !Ref ApiUsagePlan
+
 Outputs:
   ApiUrl:
-    Description: API Gateway base URL
-    Value: !Sub "https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
-  TableName:
-    Description: Store recently detected parking spots.
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
+    Description: REST API base URL
+
+  # Cognito outputs for app config
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolArn:
+    Value: !GetAtt UserPool.Arn
+  AppClientId:
+    Value: !Ref UserPoolClient
+  HostedUiBaseUrl:
+    Value: !Sub "https://${HostedUiDomainPrefix}.auth.${AWS::Region}.amazoncognito.com"
+  HostedUiAuthorizeUrl:
+    Value: !Sub "https://${HostedUiDomainPrefix}.auth.${AWS::Region}.amazoncognito.com/oauth2/authorize"
+  IssuerUrl:
+    Value: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
+  ParkingSpotTableName:
     Value: !Ref ParkingSpotTable
-  TableArn:
-    Description: DynamoDB table ARN
-    Value: !GetAtt ParkingSpotTable.Arn
+  UsersTableName:
+    Value: !Ref UsersTable

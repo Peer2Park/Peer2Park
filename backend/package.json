@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.json && sam build",
-    "deploy": "sam deploy --guided",
+    "build": "tsc -p tsconfig.json && sam build && sam validate",
+    "deploy": "sam deploy --stack-name peer2park-backend --region us-east-2 --capabilities CAPABILITY_IAM --confirm-changeset --no-fail-on-empty-changeset",
     "clean": "rimraf ./dist .aws-sam",
-    "start": "node dist/index.js",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "repository": {
@@ -22,15 +22,19 @@
   },
   "homepage": "https://github.com/Peer2Park/Peer2Park#readme",
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.921.0",
     "@aws-sdk/client-dynamodb": "^3.907.0",
     "@aws-sdk/client-s3": "^3.907.0",
     "@aws-sdk/lib-dynamodb": "^3.907.0",
-    "@types/aws-lambda": "^8.10.155"
+    "@types/aws-lambda": "^8.10.155",
+    "dotenv": "^17.2.3",
+    "open": "^10.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.7.1",
     "rimraf": "^6.0.1",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.6"
   }
 }
