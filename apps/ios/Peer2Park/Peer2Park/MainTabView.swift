@@ -14,6 +14,11 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
+            LoginView()
+                .tabItem {
+                    Label("Login", systemImage: "person.crop.circle")
+                }
+
             MapHomeView(locationManager: locationManager)
                 .tabItem {
                     Label("Map", systemImage: "map")
