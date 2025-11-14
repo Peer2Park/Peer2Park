@@ -127,7 +127,7 @@ struct ContentView: View {
                             .foregroundStyle(Color.blue)
                             .padding(.top)
                             // Navigation link to map view
-                            NavigationLink(destination: UserMapView()) {
+                            NavigationLink(destination: MapHomeView(locationManager: locationManager)) {
                                 Text("See Yourself on the Map")
                                     .font(.headline)
                                     .padding()

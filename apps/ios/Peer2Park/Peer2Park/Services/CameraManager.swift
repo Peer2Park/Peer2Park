@@ -85,16 +85,10 @@ final class CameraManager: NSObject, ObservableObject {
             }
 
             if let conn = self.videoOutput.connection(with: .video) {
-                if #available(iOS 17.0, *) {
-                    // 90° = portrait upright for the rear camera
-                    let portraitAngle: CGFloat = 90
-                    if conn.isVideoRotationAngleSupported(portraitAngle) {
-                        conn.videoRotationAngle = portraitAngle
-                        print("[CameraManager] 🎞️ Set videoRotationAngle = \(portraitAngle)")
-                    }
-                } else if conn.isVideoOrientationSupported {
-                    conn.videoOrientation = .portrait
-                    print("[CameraManager] 🎞️ Set legacy videoOrientation = portrait")
+                let portraitAngle: CGFloat = 90
+                                if conn.isVideoRotationAngleSupported(portraitAngle) {
+                                    conn.videoRotationAngle = portraitAngle
+                                    print("[CameraManager] 🎞️ Set videoRotationAngle = \(portraitAngle)")
                 }
             }
 
