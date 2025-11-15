@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct Peer2ParkApp: App {
+    @StateObject private var sessionManager = SessionManager()
+
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environmentObject(sessionManager)
         }
     }
 }

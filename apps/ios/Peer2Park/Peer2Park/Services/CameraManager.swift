@@ -84,19 +84,16 @@ final class CameraManager: NSObject, ObservableObject {
                 self.session.addOutput(self.videoOutput)
             }
 
-            if let conn = self.videoOutput.connection(with: .video) {
-                if #available(iOS 17.0, *) {
-                    // 90° = portrait upright for the rear camera
-                    let portraitAngle: CGFloat = 90
-                    if conn.isVideoRotationAngleSupported(portraitAngle) {
-                        conn.videoRotationAngle = portraitAngle
-                        print("[CameraManager] 🎞️ Set videoRotationAngle = \(portraitAngle)")
-                    }
-                } else if conn.isVideoOrientationSupported {
-                    conn.videoOrientation = .portrait
-                    print("[CameraManager] 🎞️ Set legacy videoOrientation = portrait")
-                }
-            }
+            // For video output (sample buffers)
+            if let conn = self.videoOutput.connection(with: .video),
+                           conn.isVideoOrientationSupported {
+                            conn.videoOrientation = .landscapeRight
+                            print("[CameraManager] 🎞️ Set videoOrientation = .landscapeRight")
+                        }
+
+            // For preview layer
+
+
 
 
             self.session.commitConfiguration()
@@ -188,7 +185,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
         if now - lastInferenceTime < minInferenceInterval { return }
         lastInferenceTime = now
 
-        let handler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: .up)
+        let handler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: .right)
         do {
             try handler.perform([request])
         } catch {
