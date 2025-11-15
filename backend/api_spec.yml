@@ -1,0 +1,129 @@
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/RTJORD/Peer2Park/1.0.0
+info:
+  description: Store and retrieve parking spots
+  version: "1.0.0"
+  title: Peer2Park API
+  contact:
+    email: ece49595sd.team1@gmail.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: admins
+    description: Secured Admin-only calls
+  - name: developers
+    description: Operations available to regular developers
+paths:
+  /spots:
+    get:
+      summary: searches for spots
+      operationId: getSpots
+      description: |
+        By passing in the appropriate options, you can search for
+        available spots in the system
+      parameters:
+        - in: query
+          name: latitude
+          description: latitude of destination
+          required: true
+          schema:
+            type: number
+            format: float32
+            minimum: -90.0
+            maximum: 90.0
+        - in: query
+          name: longitude
+          description: longitude of destination
+          required: true
+          schema:
+            type: number
+            format: float32
+            minimum: -180.0
+            maximum: 180.0
+        - in: query
+          name: radius
+          description: max distance of spot from destination (miles)
+          schema:
+            type: number
+            format: float32
+            minimum: 0
+            maximum: 2
+        - in: query
+          name: recency
+          description: max time since spot was reported (minutes)
+          schema:
+            type: number
+            format: float32
+            minimum: 0
+            maximum: 120
+      responses:
+        '200':
+          description: parking spots matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParkingSpot'
+        '400':
+          description: bad input parameter
+    post:
+      summary: adds a parking spot
+      operationId: createSpot
+      description: Adds a spot to the system
+      responses:
+        '201':
+          description: spot created
+        '400':
+          description: invalid input, object invalid
+        '409':
+          description: spot already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpotObservation'
+        description: Parking spot to add
+components:
+  schemas:
+    ParkingSpot:
+      type: object
+      required:
+        - id
+        - timestamp
+        - latitude
+        - longitude
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        timestamp:
+          type: integer
+          format: int32
+        latitude:
+          type: number
+          minimum: -90.0
+          maximum: 90.0
+        longitude:
+          type: number
+          minimum: -180.0
+          maximum: 180.0
+    SpotObservation:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          minimum: -90.0
+          maximum: 90.0
+        longitude:
+          type: number
+          minimum: -180.0
+          maximum: 180.0
