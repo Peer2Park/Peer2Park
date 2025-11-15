@@ -27,6 +27,11 @@ struct MapHomeView: View {
     @State private var searchInFlight = false
     @State private var routingInFlight = false
 
+    // New state for reporting spots
+    @State private var spotPosting: Bool = false
+    @State private var spotMessage: String? = nil
+    @State private var showSpotMessage: Bool = false
+
     private let formatter: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.unitStyle = .medium
@@ -50,6 +55,18 @@ struct MapHomeView: View {
                     .ignoresSafeArea()
 
                 overlayControls(for: geometry)
+
+                // Centered closable popup for showing POST response
+                if showSpotMessage {
+                    Color.black.opacity(0.35)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                        .zIndex(100)
+
+                    spotPopup
+                        .zIndex(101)
+                        .transition(.scale.combined(with: .opacity))
+                }
             }
         }
         .onAppear {
@@ -90,36 +107,74 @@ struct MapHomeView: View {
 
     // MARK: - Map Layer
     private var mapLayer: some View {
-        Map(position: $cameraPosition, scope: mapScope) {
-            UserAnnotation()
+        ZStack(alignment: .bottomTrailing) {
+            Map(position: $cameraPosition, scope: mapScope) {
+                // User location “blue dot”
+                UserAnnotation()
 
-            if let route {
-                MapPolyline(route.polyline)
-                    .stroke(.blue.gradient, lineWidth: 8)
-                    .mapOverlayLevel(level: .aboveRoads)
-            }
+                // Route polyline
+                if let route {
+                    MapPolyline(route.polyline)
+                        .stroke(.blue.gradient, lineWidth: 8)
+                        .mapOverlayLevel(level: .aboveRoads)
+                }
 
-            if let destination = selectedDestination?.placemark.coordinate {
-                Annotation("Destination", coordinate: destination) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.orange.gradient)
-                            .frame(width: 32, height: 32)
-                        Image(systemName: "flag.checkered")
-                            .foregroundStyle(.white)
-                            .font(.system(size: 16, weight: .bold))
+                // Destination pin
+                if let destination = selectedDestination?.placemark.coordinate {
+                    Annotation("Destination", coordinate: destination) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.orange.gradient)
+                                .frame(width: 32, height: 32)
+                            Image(systemName: "flag.checkered")
+                                .foregroundStyle(.white)
+                                .font(.system(size: 16, weight: .bold))
+                        }
+                        .shadow(color: .black.opacity(0.25), radius: 6, x: 0, y: 4)
                     }
-                    .shadow(color: .black.opacity(0.25), radius: 6, x: 0, y: 4)
                 }
             }
+            // Floating report button
+            Button(action: {
+                guard let coord = userCoordinate else {
+                    spotMessage = "Unable to determine your location"
+                    showSpotMessage = true
+                    return
+                }
+
+                spotPosting = true
+                Task {
+                    await sendSpot(coord)
+                    spotPosting = false
+                }
+            }) {
+                if spotPosting {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .frame(width: 56, height: 56)
+                        .background(Color.accentColor)
+                        .clipShape(Circle())
+                } else {
+                    Image(systemName: "plus")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.accentColor)
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.25), radius: 6, x: 0, y: 4)
+                }
+            }
+            .padding(16)
+            .accessibilityLabel("Report a parking spot at your current location")
+
         }
         .mapStyle(.standard(elevation: .realistic))
         .mapScope(mapScope)
         .mapControls {
             MapUserLocationButton(scope: mapScope)
-            MapCompass()
-            MapPitchToggle()
-            MapScaleView()
+            MapCompass(scope: mapScope)
+            MapPitchToggle(scope: mapScope)
+            MapScaleView(scope: mapScope)
         }
     }
 
@@ -575,6 +630,86 @@ struct MapHomeView: View {
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             )
         )
+    }
+
+    // MARK: - Spot reporting
+
+    @MainActor
+    private func sendSpot(_ coordinate: CLLocationCoordinate2D) async {
+        let urlString = "https://n7nrhon2c5.execute-api.us-east-2.amazonaws.com/dev/spots"
+        guard let url = URL(string: urlString) else {
+            spotMessage = "Invalid request URL"
+            showSpotMessage = true
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Double] = ["latitude": coordinate.latitude, "longitude": coordinate.longitude]
+
+        do {
+            request.httpBody = try JSONEncoder().encode(body)
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            var statusCode: Int? = nil
+            if let http = response as? HTTPURLResponse {
+                statusCode = http.statusCode
+            }
+
+            // Try to decode and pretty-print JSON response, otherwise fall back to raw text
+            var responseText: String = ""
+            if let jsonObj = try? JSONSerialization.jsonObject(with: data, options: []) {
+                if JSONSerialization.isValidJSONObject(jsonObj),
+                   let pretty = try? JSONSerialization.data(withJSONObject: jsonObj, options: [.prettyPrinted]),
+                   let prettyString = String(data: pretty, encoding: .utf8) {
+                    responseText = prettyString
+                } else if let raw = String(data: data, encoding: .utf8) {
+                    responseText = raw
+                }
+            } else if let raw = String(data: data, encoding: .utf8) {
+                responseText = raw
+            } else {
+                responseText = "(no response body)"
+            }
+
+            if let code = statusCode, (200...299).contains(code) {
+                spotMessage = "Status: \(code)\n\n\(responseText)"
+            } else if let code = statusCode {
+                spotMessage = "Status: \(code)\n\n\(responseText)"
+            } else {
+                spotMessage = responseText
+            }
+
+        } catch {
+            spotMessage = "Network error: \(error.localizedDescription)"
+        }
+
+        showSpotMessage = true
+    }
+
+    private var spotPopup: some View {
+        VStack(spacing: 16) {
+            Text(spotMessage ?? "Unknown error")
+                .font(.headline)
+                .multilineTextAlignment(.center)
+
+            Button(action: {
+                showSpotMessage = false
+            }) {
+                Text("Close")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.accentColor, in: Capsule())
+            }
+        }
+        .padding(24)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
+        .frame(maxWidth: 400)
     }
 }
 
