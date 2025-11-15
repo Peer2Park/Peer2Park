@@ -13,7 +13,7 @@ test.beforeAll(async () => {
 
 test("Makes POST request to /spots endpoint (dev)", async () => {
     // crate a new spot
-    const res = await fetch(baseURL + "/create-spot", {
+    const res = await fetch(baseURL + "/spots", {
         method: "POST",
         headers: {
             Authorization: `Bearer ${idToken}`,
