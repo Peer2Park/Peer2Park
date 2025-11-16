@@ -13,7 +13,7 @@ test.beforeAll(async () => {
 
 test("Makes DELETE request /spots/{id} endpoing (dev)", async () => {
     // First, create a spot to delete
-    const createRes = await fetch(baseURL + "/create-spot", {
+    const createRes = await fetch(baseURL + "/spots", {
         method: "POST",
         headers: {
             Authorization: `Bearer ${idToken}`,

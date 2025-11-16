@@ -130,14 +130,14 @@ Resources:
         AllowOrigin: "'*'"
         AllowHeaders: "'Authorization,Content-Type'"
         AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      Auth:
-        DefaultAuthorizer: CognitoUserPoolAuth
-        AddDefaultAuthorizerToCorsPreflight: false
-        Authorizers:
-          CognitoUserPoolAuth:
-            UserPoolArn: !GetAtt UserPool.Arn
-            Identity:
-              Header: Authorization
+      # Auth:
+      #   DefaultAuthorizer: CognitoUserPoolAuth
+      #   AddDefaultAuthorizerToCorsPreflight: false
+      #   Authorizers:
+      #     CognitoUserPoolAuth:
+      #       UserPoolArn: !GetAtt UserPool.Arn
+      #       Identity:
+      #         Header: Authorization
 
   # ---------------------------
   # DynamoDB Tables
@@ -196,7 +196,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref Api
-            Path: /create-spot
+            Path: /spots
             Method: post
 
   GetSpotsFunction:
