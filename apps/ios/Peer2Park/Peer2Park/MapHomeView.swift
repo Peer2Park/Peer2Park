@@ -660,7 +660,7 @@ struct MapHomeView: View {
             Button(role: .cancel) {
                 clearRoute()
             } label: {
-                Label("End navigation", systemImage: "xmark.circle")
+                Label("Clear Route", systemImage: "xmark.circle")
                     .font(.footnote.weight(.semibold))
                     .padding(.horizontal, 18)
                     .padding(.vertical, 10)
