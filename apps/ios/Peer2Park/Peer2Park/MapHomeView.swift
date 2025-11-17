@@ -954,7 +954,7 @@ struct MapHomeView: View {
                 case 200:
                     spotMessage = "Spot reported!"
                 case 400:
-                    spotMessage = "Invalid input."
+                    spotMessage = "Invalid location coordinates provided."
                 case 409:
                     spotMessage = "Spot already exists."
                 default:
