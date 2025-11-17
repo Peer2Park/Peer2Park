@@ -166,7 +166,15 @@ struct MapHomeView: View {
 
             // Post spot FAB
             Button(action: {
-                guard let coord = userCoordinate else { return }
+                guard let coord = userCoordinate else {
+                    spotMessage = "Location unavailable. Please enable location services."
+                    withAnimation { showSpotMessage = true }
+                    Task {
+                        try? await Task.sleep(for: .seconds(2.2))
+                        withAnimation { showSpotMessage = false }
+                    }
+                    return
+                }
                 spotPosting = true
                 Task {
                     await sendSpot(coord)
