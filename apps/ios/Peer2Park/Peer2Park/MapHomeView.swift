@@ -844,6 +844,8 @@ struct MapHomeView: View {
     private func selectDestination(_ item: MKMapItem) {
         selectedDestination = item
         searchFieldFocused = false
+        searchResults = []
+        routeError = nil
         buildRoute(for: item)
     }
 
