@@ -55,7 +55,7 @@ final class CameraManager: NSObject, ObservableObject {
             self.session.beginConfiguration()
             self.session.sessionPreset = .high
 
-            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera,
+            guard let device = AVCaptureDevice.default(.builtInUltraWideCamera,
                                                        for: .video,
                                                        position: .back)
             else {
