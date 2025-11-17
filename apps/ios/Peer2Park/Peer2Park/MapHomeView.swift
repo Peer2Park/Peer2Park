@@ -898,6 +898,7 @@ struct MapHomeView: View {
     }
 
     private func clearRoute() {
+        routeTask?.cancel()
         route = nil
         selectedDestination = nil
         currentStepIndex = 0
