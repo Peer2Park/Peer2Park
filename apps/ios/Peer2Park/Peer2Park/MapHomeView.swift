@@ -849,7 +849,7 @@ struct MapHomeView: View {
         } catch is CancellationError {
             return
         } catch {
-            routeError = "Search error: \(error.localizedDescription)"
+            routeError = "Search failed: \(error.localizedDescription)"
         }
     }
 
