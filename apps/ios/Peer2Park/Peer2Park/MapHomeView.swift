@@ -1055,7 +1055,7 @@ final class SpeechRecognizer: ObservableObject {
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let recognitionRequest = recognitionRequest else { throw SpeechRecognizerError.requestUnavailable }
+        guard let recognitionRequest = recognitionRequest else { throw SpeechRecognizerError.recognitionRequestFailed }
         recognitionRequest.shouldReportPartialResults = true
 
         let inputNode = audioEngine.inputNode
