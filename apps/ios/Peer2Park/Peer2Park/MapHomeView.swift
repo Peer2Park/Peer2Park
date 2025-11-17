@@ -1030,9 +1030,12 @@ enum OrientationLock {
         else { return }
 
         let preferences = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: mask)
-        // Request geometry update; newer APIs don't throw so no need for try/catch.
-        windowScene.requestGeometryUpdate(preferences)
-    }
+        // Request geometry update. On iOS 16.0/16.1 this can throw, so we use try/catch for backward compatibility.
+        do {
+            try windowScene.requestGeometryUpdate(preferences)
+        } catch {
+            // Handle or log the error as needed. For now, we ignore it.
+        }
 }
 #endif
 
