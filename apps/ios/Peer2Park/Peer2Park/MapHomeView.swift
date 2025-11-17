@@ -1027,6 +1027,12 @@ enum OrientationLock {
 }
 #endif
 
+// Custom error types for speech recognition
+enum SpeechRecognizerError: Error {
+    case requestUnavailable
+    case recognizerUnavailable
+}
+
 // Lightweight speech recognizer helper using Apple's Speech framework.
 final class SpeechRecognizer: ObservableObject {
     @Published var transcript: String = ""
@@ -1054,7 +1060,7 @@ final class SpeechRecognizer: ObservableObject {
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let recognitionRequest = recognitionRequest else { throw NSError(domain: "Speech", code: -1) }
+        guard let recognitionRequest = recognitionRequest else { throw SpeechRecognizerError.requestUnavailable }
         recognitionRequest.shouldReportPartialResults = true
 
         let inputNode = audioEngine.inputNode
@@ -1069,7 +1075,7 @@ final class SpeechRecognizer: ObservableObject {
         isRecording = true
 
         guard let recognizer = speechRecognizer, recognizer.isAvailable else {
-            throw NSError(domain: "Speech", code: -2)
+            throw SpeechRecognizerError.recognizerUnavailable
         }
 
         recognitionTask = recognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
