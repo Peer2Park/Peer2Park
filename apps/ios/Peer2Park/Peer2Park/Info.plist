@@ -9,9 +9,17 @@
 	<string>$(API_TEST_ENABLED)</string>
 	<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
 	<string>$(ASSETCATALOG_COMPILER_APPICON_NAME)</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>location</string>
-	</array>
+    <key>UIBackgroundModes</key>
+    <array>
+    <string>location</string>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    </array>
 </dict>
 </plist>

@@ -10,6 +10,7 @@ import AVFoundation
 import SwiftUI
 import Vision
 import CoreML
+import ImageIO
 
 struct Detection: Identifiable {
     let id = UUID()
@@ -29,7 +30,8 @@ final class CameraManager: NSObject, ObservableObject {
     private var modelLoaded = false
     private var lastInferenceTime: CFTimeInterval = 0
     private let minInferenceInterval: CFTimeInterval = 1.0 / 15.0
-    
+    private var currentVideoOrientation: AVCaptureVideoOrientation = .portrait
+
     // MARK: - Initialization
     override init() {
         super.init()
@@ -86,10 +88,11 @@ final class CameraManager: NSObject, ObservableObject {
 
             // For video output (sample buffers)
             if let conn = self.videoOutput.connection(with: .video),
-                           conn.isVideoOrientationSupported {
-                            conn.videoOrientation = .landscapeRight
-                            print("[CameraManager] 🎞️ Set videoOrientation = .landscapeRight")
-                        }
+               conn.isVideoOrientationSupported {
+                               conn.videoOrientation = .portrait
+                               self.currentVideoOrientation = conn.videoOrientation
+                               print("[CameraManager] 🎞️ Set videoOrientation = .portrait")
+                           }
 
             // For preview layer
 
@@ -185,11 +188,28 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
         if now - lastInferenceTime < minInferenceInterval { return }
         lastInferenceTime = now
 
-        let handler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: .right)
+        let handler = VNImageRequestHandler(
+                    cvPixelBuffer: buffer,
+                    orientation: cgImageOrientation(for: currentVideoOrientation)
+                )
         do {
             try handler.perform([request])
         } catch {
             print("[CameraManager] VN handler error: \(error)")
         }
+    }
+}
+private func cgImageOrientation(for videoOrientation: AVCaptureVideoOrientation) -> CGImagePropertyOrientation {
+    switch videoOrientation {
+    case .portrait:
+        return .right
+    case .portraitUpsideDown:
+        return .left
+    case .landscapeRight:
+        return .up
+    case .landscapeLeft:
+        return .down
+    @unknown default:
+        return .right
     }
 }

@@ -16,8 +16,8 @@ struct LiveVideoView: View {
             CameraPreview(session: cameraManager.session)
                 .ignoresSafeArea()
 
-            ForEach(cameraManager.yoloDetections) { detection in
-                GeometryReader { geo in
+            GeometryReader { geo in
+                ForEach(cameraManager.yoloDetections) { detection in
                     let frame = detection.boundingBox
                     let rect = CGRect(
                         x: frame.minX * geo.size.width,
@@ -42,9 +42,10 @@ struct LiveVideoView: View {
                     }
                 }
             }
+            .allowsHitTesting(false)
         }
         .onAppear {
-            OrientationLock.lock(.landscape)
+            OrientationLock.lock(.portrait)
         }
         .onDisappear {
             OrientationLock.unlock()

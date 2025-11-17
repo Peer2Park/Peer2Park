@@ -19,7 +19,7 @@ struct CameraPreview: UIViewRepresentable {
         view.videoPreviewLayer.videoGravity = .resizeAspectFill
         if let connection = view.videoPreviewLayer.connection,
                    connection.isVideoOrientationSupported {
-                    connection.videoOrientation = .landscapeRight
+                    connection.videoOrientation = .portrait
                 }
         return view
     }
@@ -28,8 +28,8 @@ struct CameraPreview: UIViewRepresentable {
         uiView.videoPreviewLayer.session = session
         if let connection = uiView.videoPreviewLayer.connection,
                    connection.isVideoOrientationSupported,
-                   connection.videoOrientation != .landscapeRight {
-                    connection.videoOrientation = .landscapeRight
+                   connection.videoOrientation != .portrait {
+                    connection.videoOrientation = .portrait
                 }
     }
 }
