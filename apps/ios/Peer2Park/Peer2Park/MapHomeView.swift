@@ -1046,6 +1046,7 @@ enum SpeechRecognizerError: Error {
 }
 
 // Lightweight speech recognizer helper using Apple's Speech framework.
+@MainActor
 final class SpeechRecognizer: ObservableObject {
     enum SpeechRecognizerError: Error {
         case recognitionRequestFailed
@@ -1098,13 +1099,15 @@ final class SpeechRecognizer: ObservableObject {
         recognitionTask = recognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             guard let self = self else { return }
             if let result = result {
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     self.transcript = result.bestTranscription.formattedString
                 }
             }
 
             if error != nil || (result?.isFinal ?? false) {
-                self.stop()
+                Task { @MainActor in
+                    self.stop()
+                }
             }
         }
     }
@@ -1119,6 +1122,6 @@ final class SpeechRecognizer: ObservableObject {
         recognitionRequest = nil
         recognitionTask = nil
 
-        DispatchQueue.main.async { self.isRecording = false }
+        isRecording = false
     }
 }
