@@ -1078,18 +1078,14 @@ final class SpeechRecognizer: ObservableObject {
             throw SpeechRecognizerError.recognizerUnavailable
         }
 
-        recognitionTask = recognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
+        recognitionTask = recognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in @MainActor
             guard let self = self else { return }
             if let result = result {
-                Task { @MainActor in
-                    self.transcript = result.bestTranscription.formattedString
-                }
+                self.transcript = result.bestTranscription.formattedString
             }
 
             if error != nil || (result?.isFinal ?? false) {
-                Task { @MainActor in
-                    self.stop()
-                }
+                self.stop()
             }
         }
     }
