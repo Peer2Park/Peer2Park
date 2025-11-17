@@ -758,27 +758,6 @@ struct MapHomeView: View {
         .frame(maxHeight: min(geometry.size.height * 0.35, 280))
     }
 
-    private func actionPill(
-        title: String,
-        systemImage: String,
-        disabled: Bool = false,
-        tint: Color = .accentColor,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.footnote.weight(.semibold))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(tint.opacity(0.15))
-                .foregroundStyle(tint)
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .disabled(disabled)
-        .opacity(disabled ? 0.5 : 1)
-    }
-
     // MARK: - Helpers
 
     private func subtitle(for item: MKMapItem) -> String? {
