@@ -25,6 +25,7 @@ struct MapHomeView: View {
     @State private var selectedDestination: MKMapItem?
     @State private var route: MKRoute?
     @State private var routeError: String?
+    @State private var voiceError: String?
     @State private var isNavigating = false
     @State private var currentStepIndex = 0
     @State private var voiceGuidanceMuted = false
@@ -409,6 +410,13 @@ struct MapHomeView: View {
                     .transition(.opacity)
             }
 
+            if let voiceError {
+                Text(voiceError)
+                    .font(.footnote)
+                    .foregroundColor(.orange)
+                    .transition(.opacity)
+            }
+
             if shouldShowResultsPanel {
                 searchResultsPanel(maxHeight: min(geometry.size.height * 0.35, 340))
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -473,16 +481,17 @@ struct MapHomeView: View {
                         triggerSearch()
                     } else {
                         Task {
+                            voiceError = nil
                             let allowed = await speechRecognizer.requestAuthorization()
                             if allowed {
                                 do {
                                     try speechRecognizer.start()
                                 } catch {
-                                    // If starting fails, show a simple routeError to the user
-                                    routeError = "Voice recognition unavailable"
+                                    // If starting fails, show a simple error to the user
+                                    voiceError = "Voice recognition unavailable"
                                 }
                             } else {
-                                routeError = "Speech recognition permission denied"
+                                voiceError = "Speech recognition permission denied"
                             }
                         }
                     }
