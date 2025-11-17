@@ -1019,10 +1019,6 @@ enum OrientationLock {
 #endif
 
 // Custom error types for speech recognition
-enum SpeechRecognizerError: Error {
-    case requestUnavailable
-    case recognizerUnavailable
-}
 
 // Lightweight speech recognizer helper using Apple's Speech framework.
 @MainActor
