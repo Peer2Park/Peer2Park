@@ -487,8 +487,8 @@ struct MapHomeView: View {
                                 do {
                                     try speechRecognizer.start()
                                 } catch {
-                                    // If starting fails, show a simple error to the user
-                                    voiceError = "Voice recognition unavailable"
+                                    // If starting fails, show a more informative error to the user
+                                    voiceError = "Voice recognition is not available on this device or is currently unavailable. Please check your microphone, ensure no other app is using it, and try again. (Error: \(error.localizedDescription))"
                                 }
                             } else {
                                 voiceError = "Speech recognition permission denied"
