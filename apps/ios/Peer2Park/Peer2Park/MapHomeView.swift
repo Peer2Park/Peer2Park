@@ -1100,6 +1100,13 @@ final class SpeechRecognizer: ObservableObject {
         recognitionRequest = nil
         recognitionTask = nil
 
+        // Deactivate audio session to allow other apps to use audio resources
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            print("Failed to deactivate audio session: \(error)")
+        }
+
         isRecording = false
     }
 }
