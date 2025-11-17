@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We wanna listen to you so we can hear you scream with joy at the beauty of our services! PEER 2 PARK RULEZ</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>The app requires speech recognition to process audio input for features that rely on voice or sound analysis.
+</string>
 	<key>API_BASE_URL</key>
 	<string>$(SRCROOT)/apps/ios/Peer2Park/Info.plist
 </string>
@@ -9,17 +14,17 @@
 	<string>$(API_TEST_ENABLED)</string>
 	<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
 	<string>$(ASSETCATALOG_COMPILER_APPICON_NAME)</string>
-    <key>UIBackgroundModes</key>
-    <array>
-    <string>location</string>
-    </array>
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-    <string>UIInterfaceOrientationPortrait</string>
-    </array>
-    <key>UISupportedInterfaceOrientations~ipad</key>
-    <array>
-    <string>UIInterfaceOrientationPortrait</string>
-    </array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 </dict>
 </plist>

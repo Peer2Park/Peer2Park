@@ -8,6 +8,8 @@
 import Foundation
 import SwiftUI
 import MapKit
+import Speech
+import AVFoundation
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -23,10 +25,16 @@ struct MapHomeView: View {
     @State private var selectedDestination: MKMapItem?
     @State private var route: MKRoute?
     @State private var routeError: String?
+    @State private var isNavigating = false
+    @State private var currentStepIndex = 0
+    @State private var voiceGuidanceMuted = false
 
     @State private var useSatelliteStyle = false
 
     @FocusState private var searchFieldFocused: Bool
+
+    // Voice recognition helper
+    @StateObject private var speechRecognizer = SpeechRecognizer()
 
     @State private var searchTask: Task<Void, Never>?
     @State private var routeTask: Task<Void, Never>?
@@ -43,6 +51,13 @@ struct MapHomeView: View {
         f.unitStyle = .medium
         f.unitOptions = .naturalScale
         return f
+    }()
+    
+    private let arrivalFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateStyle = .none
+        df.timeStyle = .short
+        return df
     }()
 
     private var userCoordinate: CLLocationCoordinate2D? {
@@ -193,6 +208,13 @@ struct MapHomeView: View {
 
     @ViewBuilder
     private func overlayControls(for geometry: GeometryProxy) -> some View {
+        if isNavigating {
+                navigationChrome(for: geometry)
+            } else {
+                nonNavigationChrome(for: geometry)
+            }
+        }
+    private func nonNavigationChrome(for geometry: GeometryProxy) -> some View {
         ZStack(alignment: .topLeading) {
             VStack(spacing: 0) {
                 portraitSearchChrome(for: geometry)
@@ -216,7 +238,164 @@ struct MapHomeView: View {
 
         }
     }
+    private func navigationChrome(for geometry: GeometryProxy) -> some View {
+           ZStack(alignment: .topLeading) {
+               VStack(spacing: 0) {
+                   navigationInstructionBanner
+                       .padding(.horizontal, 16)
+                       .padding(.top, geometry.safeAreaInsets.top + 6)
 
+                   Spacer(minLength: 0)
+
+                   navigationBottomPanel
+                       .padding(.horizontal, 16)
+                       .padding(.bottom, geometry.safeAreaInsets.bottom + 12)
+               }
+               .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+               VStack {
+                   Spacer()
+                   HStack {
+                       Spacer()
+                       navigationFloatingControls
+                   }
+               }
+               .padding(.trailing, 16)
+               .padding(.bottom, geometry.safeAreaInsets.bottom + 32)
+           }
+       }
+    private var navigationInstructionBanner: some View {
+            HStack(alignment: .center, spacing: 18) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(navigationDestinationLabel)
+                        .font(.footnote.weight(.semibold))
+                        .textCase(.uppercase)
+                        .foregroundStyle(.secondary)
+
+                    Text(navigationPrimaryInstruction)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+
+                    if let distance = navigationInstructionDistance {
+                        Text(distance)
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                VStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .frame(width: 58, height: 58)
+                            .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
+
+                        Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+
+                    Button(action: { voiceGuidanceMuted.toggle() }) {
+                        Image(systemName: voiceGuidanceMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .frame(width: 52, height: 52)
+                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+                            .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(voiceGuidanceMuted ? "Unmute voice directions" : "Mute voice directions")
+                }
+            }
+            .padding(22)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 32))
+            .shadow(color: .black.opacity(0.22), radius: 16, y: 8)
+        }
+
+        private var navigationBottomPanel: some View {
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(navigationETAString)
+                        .font(.headline)
+
+                    if let arrival = navigationArrivalString {
+                        Text("Arrive around \(arrival)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Button(action: endNavigation) {
+                    Label("End", systemImage: "xmark.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 22)
+                        .padding(.vertical, 12)
+                        .background(Color.red.opacity(0.15), in: RoundedRectangle(cornerRadius: 22))
+                        .foregroundStyle(.red)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(22)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 32))
+            .shadow(color: .black.opacity(0.22), radius: 16, y: 8)
+        }
+
+        private var navigationFloatingControls: some View {
+            VStack(spacing: 12) {
+                floatingCircleButton(systemName: "location.viewfinder") {
+                    if let coord = userCoordinate {
+                        recenterCamera(on: coord)
+                    }
+                }
+
+                floatingCircleButton(systemName: useSatelliteStyle ? "globe.americas.fill" : "globe.americas") {
+                    useSatelliteStyle.toggle()
+                }
+            }
+        }
+
+        private var navigationDestinationLabel: String {
+            selectedDestination?.name ?? selectedDestination?.placemark.name ?? "On the way"
+        }
+
+        private var navigationPrimaryInstruction: String {
+            guard let step = currentStep else {
+                return "Head to start"
+            }
+            let trimmed = step.instructions.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? "Continue straight" : trimmed
+        }
+
+        private var navigationInstructionDistance: String? {
+            guard let step = currentStep, step.distance > 0 else { return nil }
+            return formattedDistance(step.distance)
+        }
+
+        private var navigationETAString: String {
+            guard let route else { return "Calculating..." }
+            let duration = formattedTravelTime(route.expectedTravelTime)
+            let distance = formattedDistance(route.distance)
+            return "\(duration) • \(distance)"
+        }
+
+        private var navigationArrivalString: String? {
+            guard let route else { return nil }
+            let arrivalDate = Date().addingTimeInterval(route.expectedTravelTime)
+            return arrivalFormatter.string(from: arrivalDate)
+        }
+
+        private var currentStep: MKRoute.Step? {
+            guard let route else { return nil }
+            let steps = filteredSteps(route.steps)
+            guard !steps.isEmpty else { return nil }
+            let index = min(currentStepIndex, steps.count - 1)
+            return steps[index]
+        }
     private func portraitSearchChrome(for geometry: GeometryProxy) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             searchField()
@@ -285,11 +464,33 @@ struct MapHomeView: View {
                 Divider()
                     .frame(height: 20)
 
-                Button(action: triggerSearch) {
-                    Image(systemName: "mic.fill")
-                        .foregroundStyle(.secondary)
+                // Voice search button: tap to start/stop live recognition
+                Button {
+                    if speechRecognizer.isRecording {
+                        // stop and use final transcript
+                        speechRecognizer.stop()
+                        searchQuery = speechRecognizer.transcript
+                        triggerSearch()
+                    } else {
+                        Task {
+                            let allowed = await speechRecognizer.requestAuthorization()
+                            if allowed {
+                                do {
+                                    try speechRecognizer.start()
+                                } catch {
+                                    // If starting fails, show a simple routeError to the user
+                                    routeError = "Voice recognition unavailable"
+                                }
+                            } else {
+                                routeError = "Speech recognition permission denied"
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: speechRecognizer.isRecording ? "mic.circle.fill" : "mic.fill")
+                        .foregroundStyle(speechRecognizer.isRecording ? .red : .secondary)
+                        .accessibilityLabel(speechRecognizer.isRecording ? "Stop voice search" : "Start voice search")
                 }
-                .disabled(searchQuery.trimmingCharacters(in: .whitespaces).isEmpty)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
@@ -432,6 +633,17 @@ struct MapHomeView: View {
    
     private func routeSheet(for route: MKRoute, geometry: GeometryProxy) -> some View {
         VStack(alignment: .leading, spacing: 16) {
+            Button(action: startNavigation) {
+                            Label("Start navigation", systemImage: "play.circle.fill")
+                                .font(.headline)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 12)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.accentColor.gradient, in: RoundedRectangle(cornerRadius: 22))
+                                .foregroundStyle(.white)
+                                .shadow(color: .black.opacity(0.15), radius: 10, y: 5)
+                        }
+            
             routeAtAGlance(route)
             Divider()
             directionsList(for: route, geometry: geometry)
@@ -450,7 +662,17 @@ struct MapHomeView: View {
             }
         }
     }
-
+    private func startNavigation() {
+           guard route != nil else { return }
+           currentStepIndex = 0
+           voiceGuidanceMuted = false
+           withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+               isNavigating = true
+           }
+           if let coord = userCoordinate {
+               recenterCamera(on: coord)
+           }
+       }
     private func routeAtAGlance(_ route: MKRoute) -> some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
@@ -680,7 +902,18 @@ struct MapHomeView: View {
     private func clearRoute() {
         route = nil
         selectedDestination = nil
+        currentStepIndex = 0
+        isNavigating = false
     }
+
+    private func endNavigation() {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+            isNavigating = false
+        }
+        clearRoute()
+    }
+
+    
 
     // MARK: - Send Spot
 
@@ -788,11 +1021,81 @@ enum OrientationLock {
         else { return }
 
         let preferences = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: mask)
-        do {
-            try windowScene.requestGeometryUpdate(preferences)
-        } catch {
-            print("Failed to update orientation: \(error.localizedDescription)")
-        }
+        // Request geometry update; newer APIs don't throw so no need for try/catch.
+        windowScene.requestGeometryUpdate(preferences)
     }
 }
 #endif
+
+// Lightweight speech recognizer helper using Apple's Speech framework.
+final class SpeechRecognizer: ObservableObject {
+    @Published var transcript: String = ""
+    @Published var isRecording: Bool = false
+
+    private let speechRecognizer = SFSpeechRecognizer()
+    private let audioEngine = AVAudioEngine()
+    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    private var recognitionTask: SFSpeechRecognitionTask?
+
+    func requestAuthorization() async -> Bool {
+        await withCheckedContinuation { cont in
+            SFSpeechRecognizer.requestAuthorization { status in
+                cont.resume(returning: status == .authorized)
+            }
+        }
+    }
+
+    func start() throws {
+        transcript = ""
+
+        // Prepare audio session
+        let audioSession = AVAudioSession.sharedInstance()
+        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+
+        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+        guard let recognitionRequest = recognitionRequest else { throw NSError(domain: "Speech", code: -1) }
+        recognitionRequest.shouldReportPartialResults = true
+
+        let inputNode = audioEngine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
+            self?.recognitionRequest?.append(buffer)
+        }
+
+        audioEngine.prepare()
+        try audioEngine.start()
+
+        isRecording = true
+
+        guard let recognizer = speechRecognizer, recognizer.isAvailable else {
+            throw NSError(domain: "Speech", code: -2)
+        }
+
+        recognitionTask = recognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
+            guard let self = self else { return }
+            if let result = result {
+                DispatchQueue.main.async {
+                    self.transcript = result.bestTranscription.formattedString
+                }
+            }
+
+            if error != nil || (result?.isFinal ?? false) {
+                self.stop()
+            }
+        }
+    }
+
+    func stop() {
+        if audioEngine.isRunning {
+            audioEngine.inputNode.removeTap(onBus: 0)
+            audioEngine.stop()
+        }
+        recognitionRequest?.endAudio()
+        recognitionTask?.cancel()
+        recognitionRequest = nil
+        recognitionTask = nil
+
+        DispatchQueue.main.async { self.isRecording = false }
+    }
+}
