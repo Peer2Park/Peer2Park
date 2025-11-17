@@ -30,13 +30,15 @@ final class CameraManager: NSObject, ObservableObject {
     private var lastInferenceTime: CFTimeInterval = 0
     private let minInferenceInterval: CFTimeInterval = 1.0 / 15.0
 
+    // MARK: - Initialization
     override init() {
         super.init()
         print("[CameraManager] init() – configuring session and model…")
         configureSession()
         setupVision()
     }
-
+    
+    // MARK: Setup Video
     func requestPermission() {
         print("[CameraManager] Requesting camera permission…")
         AVCaptureDevice.requestAccess(for: .video) { granted in
@@ -91,7 +93,7 @@ final class CameraManager: NSObject, ObservableObject {
             print("[CameraManager] ✅ Session configured")
         }
     }
-
+    // MARK: Setup Vision
     private func setupVision() {
         sessionQueue.async {
             guard let modelURL = Bundle.main.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
