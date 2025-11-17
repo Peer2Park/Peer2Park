@@ -1029,6 +1029,11 @@ enum OrientationLock {
 
 // Lightweight speech recognizer helper using Apple's Speech framework.
 final class SpeechRecognizer: ObservableObject {
+    enum SpeechRecognizerError: Error {
+        case recognitionRequestFailed
+        case recognizerUnavailable
+    }
+    
     @Published var transcript: String = ""
     @Published var isRecording: Bool = false
 
@@ -1054,7 +1059,7 @@ final class SpeechRecognizer: ObservableObject {
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let recognitionRequest = recognitionRequest else { throw NSError(domain: "Speech", code: -1) }
+        guard let recognitionRequest = recognitionRequest else { throw SpeechRecognizerError.recognitionRequestFailed }
         recognitionRequest.shouldReportPartialResults = true
 
         let inputNode = audioEngine.inputNode
@@ -1069,7 +1074,7 @@ final class SpeechRecognizer: ObservableObject {
         isRecording = true
 
         guard let recognizer = speechRecognizer, recognizer.isAvailable else {
-            throw NSError(domain: "Speech", code: -2)
+            throw SpeechRecognizerError.recognizerUnavailable
         }
 
         recognitionTask = recognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
