@@ -24,7 +24,6 @@ struct MapHomeView: View {
     @State private var route: MKRoute?
     @State private var routeError: String?
 
-    @State private var selectedTravelMode: TravelMode = .drive
     @State private var useSatelliteStyle = false
 
     @FocusState private var searchFieldFocused: Bool
@@ -146,9 +145,6 @@ struct MapHomeView: View {
             .mapStyle(useSatelliteStyle ? .hybrid(elevation: .realistic) : .standard(elevation: .realistic))
             .mapScope(mapScope)
             .mapControls {
-                MapUserLocationButton(scope: mapScope)
-                MapCompass(scope: mapScope)
-                MapPitchToggle(scope: mapScope)
                 MapScaleView(scope: mapScope)
             }
 
@@ -201,19 +197,23 @@ struct MapHomeView: View {
             VStack(spacing: 0) {
                 portraitSearchChrome(for: geometry)
                 Spacer(minLength: 0)
-                bottomSheet(for: geometry)
+                // only display when we have a route
+                if route != nil {
+                    bottomSheet(for: geometry)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             VStack {
-                Spacer().frame(height: geometry.safeAreaInsets.top + 120)
+                Spacer()
                 HStack {
                     Spacer()
                     floatingControls
                 }
-                Spacer()
             }
             .padding(.trailing, 16)
+            .padding(.bottom, geometry.safeAreaInsets.bottom + 32)
+
         }
     }
 
@@ -222,8 +222,6 @@ struct MapHomeView: View {
             searchField()
                 .animation(.easeInOut(duration: 0.2), value: searchFieldFocused)
                 .animation(.easeInOut(duration: 0.2), value: searchQuery)
-
-            travelModesStrip
 
             if let routeError {
                 Text(routeError)
@@ -242,15 +240,15 @@ struct MapHomeView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.top, geometry.safeAreaInsets.top + 12)
+        .padding(.top, geometry.safeAreaInsets.top + 4)
     }
 
     // MARK: - Search + Filters
 
     private func searchField() -> some View {
         HStack(spacing: 12) {
-            Button {
-                // Placeholder for future drawer/menu
+            Menu {
+                // placeholder menu
             } label: {
                 Image(systemName: "line.3.horizontal")
                     .font(.system(size: 18, weight: .semibold))
@@ -259,7 +257,6 @@ struct MapHomeView: View {
                     .background(Color(.systemGray6))
                     .clipShape(RoundedRectangle(cornerRadius: 9))
             }
-            .buttonStyle(.plain)
 
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
@@ -318,44 +315,7 @@ struct MapHomeView: View {
         route == nil && (!searchResults.isEmpty || searchInFlight)
     }
 
-    private var travelModesStrip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(TravelMode.allCases, id: \.self) { mode in
-                    Button {
-                        selectedTravelMode = mode
-                        if route != nil {
-                            rebuildRoute()
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: mode.iconName)
-                            Text(mode.title)
-                                .font(.footnote.weight(.semibold))
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(selectedTravelMode == mode ? Color(.systemBlue).opacity(0.15) : Color(.systemBackground).opacity(0.9))
-                        .foregroundColor(selectedTravelMode == mode ? .blue : .primary)
-                        .clipShape(Capsule())
-                    }
-                }
-
-                Button {
-                    if let c = userCoordinate {
-                        recenterCamera(on: c)
-                    }
-                } label: {
-                    Image(systemName: "location.fill")
-                        .font(.footnote.weight(.semibold))
-                        .padding(10)
-                        .background(.ultraThinMaterial, in: Circle())
-                }
-                .disabled(userCoordinate == nil)
-            }
-        }
-    }
-
+  
     private var floatingControls: some View {
         VStack(spacing: 12) {
             floatingCircleButton(systemName: "location.fill") {
@@ -459,8 +419,6 @@ struct MapHomeView: View {
             if let route {
                 routeSheet(for: route, geometry: geometry)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
-            } else {
-                idleSheet
             }
         }
         .padding(20)
@@ -471,40 +429,7 @@ struct MapHomeView: View {
         .padding(.bottom, geometry.safeAreaInsets.bottom + 8)
     }
 
-    private var idleSheet: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Navigate to parking")
-                .font(.headline)
-
-            Text("Search above to plot your route while the dashcam keeps scanning in the background.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-
-            HStack(spacing: 12) {
-                actionPill(
-                    title: "Current location",
-                    systemImage: "location.fill",
-                    disabled: userCoordinate == nil
-                ) {
-                    if let c = userCoordinate {
-                        recenterCamera(on: c)
-                    }
-                }
-
-                actionPill(
-                    title: "Clear search",
-                    systemImage: "xmark.circle",
-                    tint: .secondary
-                ) {
-                    searchQuery = ""
-                    searchResults.removeAll()
-                    routeError = nil
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
+   
     private func routeSheet(for route: MKRoute, geometry: GeometryProxy) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             routeAtAGlance(route)
@@ -721,11 +646,7 @@ struct MapHomeView: View {
         }
     }
 
-    private func rebuildRoute() {
-        guard let destination = selectedDestination else { return }
-        buildRoute(for: destination)
-    }
-
+  
     @MainActor
     private func performRoute(to item: MKMapItem) async {
         guard let userCoordinate else {
@@ -736,7 +657,7 @@ struct MapHomeView: View {
         let request = MKDirections.Request()
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: userCoordinate))
         request.destination = item
-        request.transportType = selectedTravelMode.transportType
+        request.transportType = .automobile
 
         do {
             let response = try await MKDirections(request: request).calculate()
@@ -764,41 +685,54 @@ struct MapHomeView: View {
     // MARK: - Send Spot
 
     private func sendSpot(_ coordinate: CLLocationCoordinate2D) async {
+        struct SpotObservation: Codable {
+            let latitude: Double
+            let longitude: Double
+        }
+
         do {
-            let url = URL(string: "https://peer2park.com/post")!
+            // 💡 Plug in your real API URL here:
+            let url = URL(string: "https://n7nrhon2c5.execute-api.us-east-2.amazonaws.com/dev/spots")!
+            
             var req = URLRequest(url: url)
             req.httpMethod = "POST"
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-            let body: [String: Any] = [
-                "latitude": coordinate.latitude,
-                "longitude": coordinate.longitude
-            ]
-
-            req.httpBody = try JSONSerialization.data(withJSONObject: body)
+            // Encode body using Codable (matches OpenAPI spec exactly)
+            let body = SpotObservation(
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude
+            )
+            req.httpBody = try JSONEncoder().encode(body)
 
             let (_, response) = try await URLSession.shared.data(for: req)
 
-            if let http = response as? HTTPURLResponse,
-               http.statusCode == 200 {
-                spotMessage = "Spot reported!"
+            if let http = response as? HTTPURLResponse {
+                switch http.statusCode {
+                case 200:
+                    spotMessage = "Spot reported!"
+                case 400:
+                    spotMessage = "Invalid input."
+                case 409:
+                    spotMessage = "Spot already exists."
+                default:
+                    spotMessage = "Server error: \(http.statusCode)"
+                }
             } else {
-                spotMessage = "Server error reporting spot."
+                spotMessage = "Unexpected response."
             }
+
         } catch {
-            spotMessage = "Network error reporting spot."
+            spotMessage = "Network error."
         }
 
-        withAnimation {
-            showSpotMessage = true
-        }
-
+        // UI message animation (unchanged)
+        withAnimation { showSpotMessage = true }
         try? await Task.sleep(for: .seconds(2.2))
-
-        withAnimation {
-            showSpotMessage = false
-        }
+        withAnimation { showSpotMessage = false }
     }
+
+
 
     private var spotPopup: some View {
         VStack(spacing: 12) {
@@ -821,45 +755,7 @@ struct MapHomeView: View {
     }
 }
 
-// MARK: - Travel Mode Enum (New)
 
-private enum TravelMode: CaseIterable, Hashable {
-    case drive
-    case transit
-    case walk
-    case bike
-
-    var title: String {
-        switch self {
-        case .drive: return "Drive"
-        case .transit: return "Transit"
-        case .walk: return "Walk"
-        case .bike: return "Bike"
-        }
-    }
-
-    var iconName: String {
-        switch self {
-        case .drive: return "car.fill"
-        case .transit: return "tram.fill"
-        case .walk: return "figure.walk"
-        case .bike: return "bicycle"
-        }
-    }
-
-    var transportType: MKDirectionsTransportType {
-        switch self {
-        case .drive:
-            return .automobile
-        case .transit:
-            return .transit
-        case .walk:
-            return .walking
-        case .bike:
-            return .any
-        }
-    }
-}
 
 // MARK: - MKMapRect padding extension
 
