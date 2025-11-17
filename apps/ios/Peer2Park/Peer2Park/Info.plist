@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>We wanna listen to you so we can hear you scream with joy at the beauty of our services! PEER 2 PARK RULEZ</string>
+	<string>This app uses your microphone for voice search functionality to help you find parking spots hands-free.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>This app uses speech recognition to enable hands-free voice search for parking destinations.</string>
 	<key>API_BASE_URL</key>
