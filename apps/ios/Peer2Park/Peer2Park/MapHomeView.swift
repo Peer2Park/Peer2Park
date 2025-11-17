@@ -1035,6 +1035,11 @@ enum SpeechRecognizerError: Error {
 
 // Lightweight speech recognizer helper using Apple's Speech framework.
 final class SpeechRecognizer: ObservableObject {
+    enum SpeechRecognizerError: Error {
+        case recognitionRequestFailed
+        case recognizerUnavailable
+    }
+    
     @Published var transcript: String = ""
     @Published var isRecording: Bool = false
 
