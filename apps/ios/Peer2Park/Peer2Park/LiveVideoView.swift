@@ -43,11 +43,5 @@ struct LiveVideoView: View {
                 }
             }
         }
-        .onAppear {
-            OrientationLock.lock(.landscape)
-        }
-        .onDisappear {
-            OrientationLock.unlock()
-        }
     }
 }

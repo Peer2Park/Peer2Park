@@ -29,7 +29,7 @@ final class CameraManager: NSObject, ObservableObject {
     private var modelLoaded = false
     private var lastInferenceTime: CFTimeInterval = 0
     private let minInferenceInterval: CFTimeInterval = 1.0 / 15.0
-    
+
     // MARK: - Initialization
     override init() {
         super.init()
@@ -49,13 +49,13 @@ final class CameraManager: NSObject, ObservableObject {
             }
         }
     }
-    
+
     private func configureSession() {
         sessionQueue.async {
             self.session.beginConfiguration()
             self.session.sessionPreset = .high
 
-            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera,
+            guard let device = AVCaptureDevice.default(.builtInUltraWideCamera,
                                                        for: .video,
                                                        position: .back)
             else {
@@ -84,17 +84,10 @@ final class CameraManager: NSObject, ObservableObject {
                 self.session.addOutput(self.videoOutput)
             }
 
-            // For video output (sample buffers)
             if let conn = self.videoOutput.connection(with: .video),
-                           conn.isVideoOrientationSupported {
-                            conn.videoOrientation = .landscapeRight
-                            print("[CameraManager] 🎞️ Set videoOrientation = .landscapeRight")
-                        }
-
-            // For preview layer
-
-
-
+               conn.isVideoOrientationSupported {
+                conn.videoOrientation = .portrait
+            }
 
             self.session.commitConfiguration()
             print("[CameraManager] ✅ Session configured")
@@ -185,7 +178,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
         if now - lastInferenceTime < minInferenceInterval { return }
         lastInferenceTime = now
 
-        let handler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: .right)
+        let handler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: .up)
         do {
             try handler.perform([request])
         } catch {

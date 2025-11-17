@@ -8,35 +8,57 @@
 import Foundation
 import SwiftUI
 import MapKit
+import Speech
+import AVFoundation
 #if canImport(UIKit)
 import UIKit
 #endif
 
 struct MapHomeView: View {
     @ObservedObject var locationManager: LocationManager
+
+    @Namespace private var mapScope
+
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var searchQuery: String = ""
     @State private var searchResults: [MKMapItem] = []
     @State private var selectedDestination: MKMapItem?
     @State private var route: MKRoute?
     @State private var routeError: String?
+    @State private var voiceError: String?
+    @State private var isNavigating = false
+    @State private var currentStepIndex = 0
+    @State private var voiceGuidanceMuted = false
+
+    @State private var useSatelliteStyle = false
+
     @FocusState private var searchFieldFocused: Bool
-    @Namespace private var mapScope
+
+    // Voice recognition helper
+    @StateObject private var speechRecognizer = SpeechRecognizer()
+
     @State private var searchTask: Task<Void, Never>?
     @State private var routeTask: Task<Void, Never>?
     @State private var searchInFlight = false
     @State private var routingInFlight = false
 
-    // New state for reporting spots
+    // Reporting spots
     @State private var spotPosting: Bool = false
     @State private var spotMessage: String? = nil
     @State private var showSpotMessage: Bool = false
 
     private let formatter: MeasurementFormatter = {
-        let formatter = MeasurementFormatter()
-        formatter.unitStyle = .medium
-        formatter.unitOptions = .naturalScale
-        return formatter
+        let f = MeasurementFormatter()
+        f.unitStyle = .medium
+        f.unitOptions = .naturalScale
+        return f
+    }()
+    
+    private let arrivalFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateStyle = .none
+        df.timeStyle = .short
+        return df
     }()
 
     private var userCoordinate: CLLocationCoordinate2D? {
@@ -56,7 +78,6 @@ struct MapHomeView: View {
 
                 overlayControls(for: geometry)
 
-                // Centered closable popup for showing POST response
                 if showSpotMessage {
                     Color.black.opacity(0.35)
                         .ignoresSafeArea()
@@ -70,11 +91,12 @@ struct MapHomeView: View {
             }
         }
         .onAppear {
-#if canImport(UIKit)
-            OrientationLock.lock(.landscape)
-#endif
-            if let coordinate = userCoordinate {
-                recenterCamera(on: coordinate)
+            #if canImport(UIKit)
+            OrientationLock.lock(.portrait)
+            #endif
+
+            if let c = userCoordinate {
+                recenterCamera(on: c)
             }
         }
         .onReceive(locationManager.$userLocation.compactMap { $0 }) { newCoord in
@@ -83,7 +105,8 @@ struct MapHomeView: View {
                 cameraPosition = .region(
                     MKCoordinateRegion(
                         center: newCoord,
-                        span: MKCoordinateSpan(latitudeDelta: 0.012, longitudeDelta: 0.012)
+                        span: MKCoordinateSpan(latitudeDelta: 0.012,
+                                               longitudeDelta: 0.012)
                     )
                 )
             }
@@ -95,9 +118,9 @@ struct MapHomeView: View {
             }
         }
         .onDisappear {
-#if canImport(UIKit)
+            #if canImport(UIKit)
             OrientationLock.unlock()
-#endif
+            #endif
             searchTask?.cancel()
             routeTask?.cancel()
         }
@@ -106,10 +129,11 @@ struct MapHomeView: View {
     }
 
     // MARK: - Map Layer
+
     private var mapLayer: some View {
         ZStack(alignment: .bottomTrailing) {
             Map(position: $cameraPosition, scope: mapScope) {
-                // User location “blue dot”
+                // User “blue dot”
                 UserAnnotation()
 
                 // Route polyline
@@ -120,8 +144,8 @@ struct MapHomeView: View {
                 }
 
                 // Destination pin
-                if let destination = selectedDestination?.placemark.coordinate {
-                    Annotation("Destination", coordinate: destination) {
+                if let dest = selectedDestination?.placemark.coordinate {
+                    Annotation("Destination", coordinate: dest) {
                         ZStack {
                             Circle()
                                 .fill(Color.orange.gradient)
@@ -134,14 +158,23 @@ struct MapHomeView: View {
                     }
                 }
             }
-            // Floating report button
+            .mapStyle(useSatelliteStyle ? .hybrid(elevation: .realistic) : .standard(elevation: .realistic))
+            .mapScope(mapScope)
+            .mapControls {
+                MapScaleView(scope: mapScope)
+            }
+
+            // Post spot FAB
             Button(action: {
                 guard let coord = userCoordinate else {
-                    spotMessage = "Unable to determine your location"
-                    showSpotMessage = true
+                    spotMessage = "Location unavailable. Please enable location services."
+                    withAnimation { showSpotMessage = true }
+                    Task {
+                        try? await Task.sleep(for: .seconds(2.2))
+                        withAnimation { showSpotMessage = false }
+                    }
                     return
                 }
-
                 spotPosting = true
                 Task {
                     await sendSpot(coord)
@@ -166,15 +199,6 @@ struct MapHomeView: View {
             }
             .padding(16)
             .accessibilityLabel("Report a parking spot at your current location")
-
-        }
-        .mapStyle(.standard(elevation: .realistic))
-        .mapScope(mapScope)
-        .mapControls {
-            MapUserLocationButton(scope: mapScope)
-            MapCompass(scope: mapScope)
-            MapPitchToggle(scope: mapScope)
-            MapScaleView(scope: mapScope)
         }
     }
 
@@ -186,140 +210,357 @@ struct MapHomeView: View {
                 .foregroundColor(.secondary)
         }
         .padding(24)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
     }
 
     // MARK: - Overlay Controls
+
     @ViewBuilder
     private func overlayControls(for geometry: GeometryProxy) -> some View {
-        VStack(spacing: 0) {
-            topOverlay(for: geometry)
+        if isNavigating {
+                navigationChrome(for: geometry)
+            } else {
+                nonNavigationChrome(for: geometry)
+            }
+        }
+    private func nonNavigationChrome(for geometry: GeometryProxy) -> some View {
+        ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                portraitSearchChrome(for: geometry)
+                Spacer(minLength: 0)
+                // only display when we have a route
+                if route != nil {
+                    bottomSheet(for: geometry)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    floatingControls
+                }
+            }
+            .padding(.trailing, 16)
+            .padding(.bottom, geometry.safeAreaInsets.bottom + 32)
+
+        }
+    }
+    private func navigationChrome(for geometry: GeometryProxy) -> some View {
+           ZStack(alignment: .topLeading) {
+               VStack(spacing: 0) {
+                   navigationInstructionBanner
+                       .padding(.horizontal, 16)
+                       .padding(.top, geometry.safeAreaInsets.top + 6)
+
+                   Spacer(minLength: 0)
+
+                   navigationBottomPanel
+                       .padding(.horizontal, 16)
+                       .padding(.bottom, geometry.safeAreaInsets.bottom + 12)
+               }
+               .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+               VStack {
+                   Spacer()
+                   HStack {
+                       Spacer()
+                       navigationFloatingControls
+                   }
+               }
+               .padding(.trailing, 16)
+               .padding(.bottom, geometry.safeAreaInsets.bottom + 32)
+           }
+       }
+    private var navigationInstructionBanner: some View {
+            HStack(alignment: .center, spacing: 18) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(navigationDestinationLabel)
+                        .font(.footnote.weight(.semibold))
+                        .textCase(.uppercase)
+                        .foregroundStyle(.secondary)
+
+                    Text(navigationPrimaryInstruction)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+
+                    if let distance = navigationInstructionDistance {
+                        Text(distance)
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                VStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .frame(width: 58, height: 58)
+                            .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
+
+                        Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+
+                    Button(action: { voiceGuidanceMuted.toggle() }) {
+                        Image(systemName: voiceGuidanceMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .frame(width: 52, height: 52)
+                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+                            .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(voiceGuidanceMuted ? "Unmute voice directions" : "Mute voice directions")
+                }
+            }
+            .padding(22)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 32))
+            .shadow(color: .black.opacity(0.22), radius: 16, y: 8)
+        }
+
+        private var navigationBottomPanel: some View {
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(navigationETAString)
+                        .font(.headline)
+
+                    if let arrival = navigationArrivalString {
+                        Text("Arrive around \(arrival)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Button(action: endNavigation) {
+                    Label("End", systemImage: "xmark.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 22)
+                        .padding(.vertical, 12)
+                        .background(Color.red.opacity(0.15), in: RoundedRectangle(cornerRadius: 22))
+                        .foregroundStyle(.red)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(22)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 32))
+            .shadow(color: .black.opacity(0.22), radius: 16, y: 8)
+        }
+
+        private var navigationFloatingControls: some View {
+            VStack(spacing: 12) {
+                floatingCircleButton(systemName: "location.viewfinder") {
+                    if let coord = userCoordinate {
+                        recenterCamera(on: coord)
+                    }
+                }
+
+                floatingCircleButton(systemName: useSatelliteStyle ? "globe.americas.fill" : "globe.americas") {
+                    useSatelliteStyle.toggle()
+                }
+            }
+        }
+
+        private var navigationDestinationLabel: String {
+            selectedDestination?.name ?? selectedDestination?.placemark.name ?? "On the way"
+        }
+
+        private var navigationPrimaryInstruction: String {
+            guard let step = currentStep else {
+                return "Head to start"
+            }
+            let trimmed = step.instructions.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? "Continue straight" : trimmed
+        }
+
+        private var navigationInstructionDistance: String? {
+            guard let step = currentStep, step.distance > 0 else { return nil }
+            return formattedDistance(step.distance)
+        }
+
+        private var navigationETAString: String {
+            guard let route else { return "Calculating..." }
+            let duration = formattedTravelTime(route.expectedTravelTime)
+            let distance = formattedDistance(route.distance)
+            return "\(duration) • \(distance)"
+        }
+
+        private var navigationArrivalString: String? {
+            guard let route else { return nil }
+            let arrivalDate = Date().addingTimeInterval(route.expectedTravelTime)
+            return arrivalFormatter.string(from: arrivalDate)
+        }
+
+        private var currentStep: MKRoute.Step? {
+            guard let route else { return nil }
+            let steps = filteredSteps(route.steps)
+            guard !steps.isEmpty else { return nil }
+            let index = min(currentStepIndex, steps.count - 1)
+            return steps[index]
+        }
+    private func portraitSearchChrome(for geometry: GeometryProxy) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            searchField()
+                .animation(.easeInOut(duration: 0.2), value: searchFieldFocused)
+                .animation(.easeInOut(duration: 0.2), value: searchQuery)
 
             if let routeError {
                 Text(routeError)
                     .font(.footnote)
                     .foregroundColor(.orange)
-                    .padding(.top, 6)
                     .transition(.opacity)
             }
 
-            Spacer()
-
-            bottomOverlay(for: geometry)
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 14)
-        .padding(.bottom, 20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    @ViewBuilder
-    private func topOverlay(for geometry: GeometryProxy) -> some View {
-        HStack(spacing: 0) {
-            Spacer(minLength: 0)
-            Group {
-                if let route {
-                    routeControlStrip(route, width: geometry.size.width)
-                } else {
-                    searchStrip(for: geometry)
-                }
-            }
-            Spacer(minLength: 0)
-        }
-    }
-
-    @ViewBuilder
-    private func bottomOverlay(for geometry: GeometryProxy) -> some View {
-        Group {
-            if let route {
-                directionsPanel(for: route, in: geometry)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            } else {
-                helperBadge
+            if let voiceError {
+                Text(voiceError)
+                    .font(.footnote)
+                    .foregroundColor(.orange)
                     .transition(.opacity)
             }
-        }
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.bottom, 8)
-    }
-
-    // MARK: - Search Strip
-    private func searchStrip(for geometry: GeometryProxy) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            searchField(width: searchFieldWidth(for: geometry.size.width))
-                .animation(.easeInOut(duration: 0.2), value: searchFieldFocused)
-                .animation(.easeInOut(duration: 0.2), value: searchQuery)
 
             if shouldShowResultsPanel {
-                searchResultsPanel
-                    .frame(
-                        width: min(340, geometry.size.width * 0.3),
-                        height: min(320, geometry.size.height * 0.55)
-                    )
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                searchResultsPanel(maxHeight: min(geometry.size.height * 0.35, 340))
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
 
             if routingInFlight {
                 routingStatusBadge
             }
         }
+        .padding(.horizontal, 16)
+        .padding(.top, geometry.safeAreaInsets.top + 4)
     }
 
-    private func searchField(width: CGFloat) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-            TextField("Search destinations", text: $searchQuery)
-                .textFieldStyle(.plain)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-                .focused($searchFieldFocused)
-                .submitLabel(.search)
-                .onSubmit { triggerSearch() }
-            if !searchQuery.isEmpty {
-                Button {
-                    searchQuery = ""
-                    searchResults.removeAll()
-                    routeError = nil
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+    // MARK: - Search + Filters
+
+    private func searchField() -> some View {
+        HStack(spacing: 12) {
+            Menu {
+                // placeholder menu
+            } label: {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 32, height: 32)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 9))
+            }
+
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+
+                TextField("Search here", text: $searchQuery)
+                    .textFieldStyle(.plain)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+                    .focused($searchFieldFocused)
+                    .submitLabel(.search)
+                    .onSubmit { triggerSearch() }
+
+                if !searchQuery.isEmpty {
+                    Button {
+                        searchQuery = ""
+                        searchResults.removeAll()
+                        routeError = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Clear search text")
-            }
 
-            Button(action: triggerSearch) {
-                Image(systemName: "arrow.forward.circle.fill")
-                    .symbolRenderingMode(.hierarchical)
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.tint)
+                Divider()
+                    .frame(height: 20)
+
+                // Voice search button: tap to start/stop live recognition
+                Button {
+                    if speechRecognizer.isRecording {
+                        // stop and use final transcript
+                        speechRecognizer.stop()
+                        searchQuery = speechRecognizer.transcript
+                        triggerSearch()
+                    } else {
+                        Task {
+                            voiceError = nil
+                            let allowed = await speechRecognizer.requestAuthorization()
+                            if allowed {
+                                do {
+                                    try speechRecognizer.start()
+                                } catch {
+                                    // If starting fails, show a more informative error to the user
+                                    voiceError = "Voice recognition is not available on this device or is currently unavailable. Please check your microphone, ensure no other app is using it, and try again. (Error: \(error.localizedDescription))"
+                                }
+                            } else {
+                                voiceError = "Speech recognition permission denied"
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: speechRecognizer.isRecording ? "mic.circle.fill" : "mic.fill")
+                        .foregroundStyle(speechRecognizer.isRecording ? .red : .secondary)
+                        .accessibilityLabel(speechRecognizer.isRecording ? "Stop voice search" : "Start voice search")
+                }
             }
-            .disabled(searchQuery.trimmingCharacters(in: .whitespaces).isEmpty)
-            .accessibilityLabel("Search for destination")
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 28))
+            .shadow(color: .black.opacity(0.14), radius: 10, y: 6)
+
+            Button {
+                // Placeholder profile
+            } label: {
+                Circle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: 36, height: 36)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .foregroundStyle(.secondary)
+                    )
+            }
+            .buttonStyle(.plain)
         }
-        .padding(.horizontal, isSearchCollapsed ? 12 : 14)
-        .padding(.vertical, isSearchCollapsed ? 8 : 10)
-        .frame(width: width)
-        .background(.regularMaterial, in: Capsule(style: .continuous))
-        .shadow(color: .black.opacity(0.18), radius: 8, y: 6)
-    }
-
-    private func searchFieldWidth(for totalWidth: CGFloat) -> CGFloat {
-        let maxWidth = min(440, totalWidth * 0.48)
-        let collapsedWidth = min(220, totalWidth * 0.26)
-        return (searchFieldFocused || !searchQuery.isEmpty) ? maxWidth : collapsedWidth
     }
 
     private var shouldShowResultsPanel: Bool {
         route == nil && (!searchResults.isEmpty || searchInFlight)
     }
 
-    private var isSearchCollapsed: Bool {
-        route == nil && searchQuery.isEmpty && !searchFieldFocused
+  
+    private var floatingControls: some View {
+        VStack(spacing: 12) {
+            floatingCircleButton(systemName: "location.fill") {
+                if let c = userCoordinate {
+                    recenterCamera(on: c)
+                }
+            }
+
+            floatingCircleButton(systemName: useSatelliteStyle ? "globe.americas.fill" : "globe.americas") {
+                useSatelliteStyle.toggle()
+            }
+        }
     }
 
-    private var searchResultsPanel: some View {
+    private func floatingCircleButton(systemName: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 44, height: 44)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func searchResultsPanel(maxHeight: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(searchInFlight ? "Searching..." : "Results")
@@ -337,73 +578,127 @@ struct MapHomeView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ScrollView {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 0) {
                         ForEach(Array(searchResults.enumerated()), id: \.offset) { index, item in
                             Button {
                                 selectDestination(item)
                             } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(item.name ?? "Unnamed location")
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(.primary)
-                                    if let subtitle = subtitle(for: item) {
-                                        Text(subtitle)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                HStack(alignment: .top, spacing: 12) {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .font(.title3)
+                                        .foregroundStyle(.red)
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(item.name ?? "Unnamed location")
+                                            .font(.subheadline.weight(.semibold))
+                                            .lineLimit(1)
+
+                                        if let sub = subtitle(for: item) {
+                                            Text(sub)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                                .lineLimit(2)
+                                        }
                                     }
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .foregroundStyle(.tertiary)
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.vertical, 8)
-                                .contentShape(Rectangle())
+                                .padding(.vertical, 10)
+                                .padding(.horizontal, 8)
                             }
                             .buttonStyle(.plain)
-                            .padding(.horizontal, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(index % 2 == 0 ? Color(.secondarySystemBackground) : Color(.systemBackground))
-                            )
+
+                            if index < searchResults.count - 1 {
+                                Divider()
+                            }
                         }
                     }
-                    .padding(.bottom, 4)
                 }
             }
         }
         .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .frame(maxHeight: maxHeight)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
         .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
     }
 
-    // MARK: - Route Controls
-    private func routeControlStrip(_ route: MKRoute, width: CGFloat) -> some View {
-        HStack(alignment: .center, spacing: 16) {
+    // MARK: - Bottom Sheet
+
+    @ViewBuilder
+    private func bottomSheet(for geometry: GeometryProxy) -> some View {
+        VStack(spacing: 16) {
+            Capsule()
+                .fill(Color.secondary.opacity(0.4))
+                .frame(width: 44, height: 5)
+
+            if let route {
+                routeSheet(for: route, geometry: geometry)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 32))
+        .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
+        .padding(.horizontal, 16)
+        .padding(.bottom, geometry.safeAreaInsets.bottom + 8)
+    }
+
+   
+    private func routeSheet(for route: MKRoute, geometry: GeometryProxy) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Button(action: startNavigation) {
+                            Label("Start navigation", systemImage: "play.circle.fill")
+                                .font(.headline)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 12)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.accentColor.gradient, in: RoundedRectangle(cornerRadius: 22))
+                                .foregroundStyle(.white)
+                                .shadow(color: .black.opacity(0.15), radius: 10, y: 5)
+                        }
+            
+            routeAtAGlance(route)
+            Divider()
+            directionsList(for: route, geometry: geometry)
+
             Button(role: .cancel) {
                 clearRoute()
             } label: {
-                Label("Cancel", systemImage: "xmark")
+                Label("Clear Route", systemImage: "xmark.circle")
                     .font(.footnote.weight(.semibold))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial, in: Capsule())
-            }
-            .buttonStyle(.plain)
-
-            routeAtAGlance(route)
-                .frame(maxWidth: min(420, width * 0.45))
-
-            if routingInFlight {
-                ProgressView()
-                    .controlSize(.small)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.red.opacity(0.12))
+                    .foregroundStyle(.red)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
             }
         }
-        .padding(.horizontal, 18)
     }
-
+    private func startNavigation() {
+           guard route != nil else { return }
+           currentStepIndex = 0
+           voiceGuidanceMuted = false
+           withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+               isNavigating = true
+           }
+           if let coord = userCoordinate {
+               recenterCamera(on: coord)
+           }
+       }
     private func routeAtAGlance(_ route: MKRoute) -> some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(selectedDestination?.name ?? selectedDestination?.placemark.name ?? "On the way")
+                Text(selectedDestination?.name ??
+                     selectedDestination?.placemark.name ??
+                     "On the way")
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
+
                 HStack(spacing: 16) {
                     Label(formattedDistance(route.distance), systemImage: "road.lanes")
                     Label(formattedTravelTime(route.expectedTravelTime), systemImage: "clock")
@@ -411,32 +706,16 @@ struct MapHomeView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
+
             Spacer()
+
             Image(systemName: "chevron.forward")
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 26))
         .shadow(color: .black.opacity(0.12), radius: 10, y: 5)
-    }
-
-    private var helperBadge: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "map")
-                .font(.headline)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Navigate to parking")
-                    .font(.subheadline.weight(.semibold))
-                Text("Search above to plot your route while the dashcam keeps scanning.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-        }
-        .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .frame(maxWidth: 360, alignment: .leading)
     }
 
     private var routingStatusBadge: some View {
@@ -452,44 +731,43 @@ struct MapHomeView: View {
         .background(.ultraThinMaterial, in: Capsule())
     }
 
-    // MARK: - Directions Panel
-    private func directionsPanel(for route: MKRoute, in geometry: GeometryProxy) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Turn-by-turn")
-                .font(.subheadline.weight(.semibold))
-            ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(Array(filteredSteps(route.steps).enumerated()), id: \.offset) { index, step in
-                        HStack(alignment: .top, spacing: 10) {
-                            Text("\(index + 1)")
-                                .font(.caption2.weight(.bold))
-                                .frame(width: 24, height: 24)
-                                .background(index == 0 ? Color.green.opacity(0.8) : Color.accentColor.opacity(0.8))
-                                .clipShape(Circle())
-                                .foregroundStyle(.white)
-                                .padding(.top, 2)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(step.instructions.isEmpty ? "Continue" : step.instructions)
-                                    .font(.footnote)
-                                Text(formattedDistance(step.distance))
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
+    private func directionsList(for route: MKRoute, geometry: GeometryProxy) -> some View {
+        let steps = filteredSteps(route.steps)
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+                    HStack(alignment: .top, spacing: 12) {
+                        Text("\(index + 1)")
+                            .font(.caption2.weight(.bold))
+                            .frame(width: 26, height: 26)
+                            .background(index == 0 ? Color.green.opacity(0.85)
+                                                  : Color.accentColor.opacity(0.85))
+                            .clipShape(Circle())
+                            .foregroundStyle(.white)
+                            .padding(.top, 2)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(step.instructions.isEmpty ? "Continue" : step.instructions)
+                                .font(.footnote)
+
+                            Text(formattedDistance(step.distance))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
                         }
+                    }
+
+                    if index < steps.count - 1 {
                         Divider()
                     }
                 }
             }
-            .frame(height: min(200, geometry.size.height * 0.32))
+            .padding(.vertical, 4)
         }
-        .padding(16)
-        .frame(maxWidth: min(360, geometry.size.width * 0.32))
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-        .shadow(color: .black.opacity(0.2), radius: 14, y: 8)
-        .padding(.horizontal, 8)
+        .frame(maxHeight: min(geometry.size.height * 0.35, 280))
     }
 
     // MARK: - Helpers
+
     private func subtitle(for item: MKMapItem) -> String? {
         if let subtitle = item.placemark.title {
             return subtitle
@@ -514,10 +792,10 @@ struct MapHomeView: View {
     }
 
     private func formattedTravelTime(_ time: TimeInterval) -> String {
-        let formatter = DateComponentsFormatter()
-        formatter.unitsStyle = .abbreviated
-        formatter.allowedUnits = [.hour, .minute]
-        return formatter.string(from: time) ?? "--"
+        let df = DateComponentsFormatter()
+        df.unitsStyle = .abbreviated
+        df.allowedUnits = [.hour, .minute]
+        return df.string(from: time) ?? "--"
     }
 
     private func triggerSearch() {
@@ -558,68 +836,7 @@ struct MapHomeView: View {
         } catch is CancellationError {
             return
         } catch {
-            routeError = error.localizedDescription
-            searchResults = []
-        }
-    }
-
-    private func selectDestination(_ item: MKMapItem) {
-        selectedDestination = item
-        searchQuery = item.name ?? item.placemark.name ?? searchQuery
-        searchResults.removeAll()
-        searchFieldFocused = false
-        routeTask?.cancel()
-        routeTask = Task {
-            await calculateRoute(to: item)
-            await MainActor.run { routeTask = nil }
-        }
-    }
-
-    @MainActor
-    private func calculateRoute(to destination: MKMapItem) async {
-        guard let userCoordinate else {
-            routeError = "Waiting for your current location"
-            return
-        }
-
-        routingInFlight = true
-        defer { routingInFlight = false }
-
-        let sourcePlacemark = MKPlacemark(coordinate: userCoordinate)
-        let request = MKDirections.Request()
-        request.source = MKMapItem(placemark: sourcePlacemark)
-        request.destination = destination
-        request.transportType = .automobile
-        request.requestsAlternateRoutes = false
-
-        do {
-            let response = try await MKDirections(request: request).calculate()
-            guard !Task.isCancelled else { return }
-            if let calculatedRoute = response.routes.first {
-                routeError = nil
-                route = calculatedRoute
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.85)) {
-                    cameraPosition = .rect(calculatedRoute.polyline.boundingMapRect.padded(by: 1200))
-                }
-            } else {
-                routeError = "No routes available"
-                route = nil
-            }
-        } catch is CancellationError {
-            return
-        } catch {
-            routeError = "Navigation unavailable: \(error.localizedDescription)"
-            route = nil
-        }
-    }
-
-    private func clearRoute() {
-        routeTask?.cancel()
-        route = nil
-        selectedDestination = nil
-        routeError = nil
-        if let coordinate = userCoordinate {
-            recenterCamera(on: coordinate)
+            routeError = "Search failed: \(error.localizedDescription)"
         }
     }
 
@@ -632,86 +849,147 @@ struct MapHomeView: View {
         )
     }
 
-    // MARK: - Spot reporting
+    private func selectDestination(_ item: MKMapItem) {
+        selectedDestination = item
+        searchFieldFocused = false
+        searchResults = []
+        routeError = nil
+        buildRoute(for: item)
+    }
 
+    private func buildRoute(for item: MKMapItem) {
+        routingInFlight = true
+        routeTask?.cancel()
+        routeTask = Task {
+            await performRoute(to: item)
+            await MainActor.run { routingInFlight = false }
+        }
+    }
+
+  
     @MainActor
-    private func sendSpot(_ coordinate: CLLocationCoordinate2D) async {
-        let urlString = "https://n7nrhon2c5.execute-api.us-east-2.amazonaws.com/dev/spots"
-        guard let url = URL(string: urlString) else {
-            spotMessage = "Invalid request URL"
-            showSpotMessage = true
+    private func performRoute(to item: MKMapItem) async {
+        guard let userCoordinate else {
+            routeError = "Waiting for your location"
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let body: [String: Double] = ["latitude": coordinate.latitude, "longitude": coordinate.longitude]
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: userCoordinate))
+        request.destination = item
+        request.transportType = .automobile
 
         do {
-            request.httpBody = try JSONEncoder().encode(body)
+            let response = try await MKDirections(request: request).calculate()
+            guard let first = response.routes.first else {
+                routeError = "No routes found"
+                return
+            }
 
-            let (data, response) = try await URLSession.shared.data(for: request)
-            var statusCode: Int? = nil
+            route = first
+
+            let padded = first.polyline.boundingMapRect.padded(by: 600)
+            cameraPosition = .rect(padded)
+        } catch is CancellationError {
+            return
+        } catch {
+            routeError = "Routing failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func clearRoute() {
+        routeTask?.cancel()
+        route = nil
+        selectedDestination = nil
+        currentStepIndex = 0
+        isNavigating = false
+    }
+
+    private func endNavigation() {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+            isNavigating = false
+        }
+        clearRoute()
+    }
+
+    
+
+    // MARK: - Send Spot
+
+    private func sendSpot(_ coordinate: CLLocationCoordinate2D) async {
+        struct SpotObservation: Codable {
+            let latitude: Double
+            let longitude: Double
+        }
+
+        do {
+            // 💡 Plug in your real API URL here:
+            let url = URL(string: "https://n7nrhon2c5.execute-api.us-east-2.amazonaws.com/dev/spots")!
+            
+            var req = URLRequest(url: url)
+            req.httpMethod = "POST"
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+            // Encode body using Codable (matches OpenAPI spec exactly)
+            let body = SpotObservation(
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude
+            )
+            req.httpBody = try JSONEncoder().encode(body)
+
+            let (_, response) = try await URLSession.shared.data(for: req)
+
             if let http = response as? HTTPURLResponse {
-                statusCode = http.statusCode
-            }
-
-            // Try to decode and pretty-print JSON response, otherwise fall back to raw text
-            var responseText: String = ""
-            if let jsonObj = try? JSONSerialization.jsonObject(with: data, options: []) {
-                if JSONSerialization.isValidJSONObject(jsonObj),
-                   let pretty = try? JSONSerialization.data(withJSONObject: jsonObj, options: [.prettyPrinted]),
-                   let prettyString = String(data: pretty, encoding: .utf8) {
-                    responseText = prettyString
-                } else if let raw = String(data: data, encoding: .utf8) {
-                    responseText = raw
+                switch http.statusCode {
+                case 200:
+                    spotMessage = "Spot reported!"
+                case 400:
+                    spotMessage = "Invalid location coordinates provided."
+                case 409:
+                    spotMessage = "Spot already exists."
+                default:
+                    spotMessage = "Server error: \(http.statusCode)"
                 }
-            } else if let raw = String(data: data, encoding: .utf8) {
-                responseText = raw
             } else {
-                responseText = "(no response body)"
-            }
-
-            if let code = statusCode, (200...299).contains(code) {
-                spotMessage = "Status: \(code)\n\n\(responseText)"
-            } else if let code = statusCode {
-                spotMessage = "Status: \(code)\n\n\(responseText)"
-            } else {
-                spotMessage = responseText
+                spotMessage = "Unexpected response."
             }
 
         } catch {
-            spotMessage = "Network error: \(error.localizedDescription)"
+            spotMessage = "Network error."
         }
 
-        showSpotMessage = true
+        // UI message animation (unchanged)
+        withAnimation { showSpotMessage = true }
+        try? await Task.sleep(for: .seconds(2.2))
+        withAnimation { showSpotMessage = false }
     }
 
-    private var spotPopup: some View {
-        VStack(spacing: 16) {
-            Text(spotMessage ?? "Unknown error")
-                .font(.headline)
-                .multilineTextAlignment(.center)
 
-            Button(action: {
-                showSpotMessage = false
-            }) {
-                Text("Close")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.accentColor, in: Capsule())
+
+    private var spotPopup: some View {
+        VStack(spacing: 12) {
+            Text(spotMessage ?? "Done")
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Button("OK") {
+                withAnimation { showSpotMessage = false }
             }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .background(Color.accentColor)
+            .clipShape(Capsule())
         }
         .padding(24)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
         .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
         .frame(maxWidth: 400)
     }
 }
+
+
+
+// MARK: - MKMapRect padding extension
 
 private extension MKMapRect {
     func padded(by amount: Double) -> MKMapRect {
@@ -726,12 +1004,12 @@ private extension MKMapRect {
 
 #if canImport(UIKit)
 enum OrientationLock {
-    static func lock(_ mask: UIInterfaceOrientationMask) {
+    static func lock(_ mask: UIInterfaceOrientationMask = .portrait) {
         updateOrientation(mask)
     }
 
     static func unlock() {
-        updateOrientation(.allButUpsideDown)
+        updateOrientation(.portrait)
     }
 
     private static func updateOrientation(_ mask: UIInterfaceOrientationMask) {
@@ -742,11 +1020,102 @@ enum OrientationLock {
         else { return }
 
         let preferences = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: mask)
+        // Request geometry update. On iOS 16.0/16.1 this can throw, so we use try/catch for backward compatibility.
         do {
             try windowScene.requestGeometryUpdate(preferences)
         } catch {
-            print("Failed to update orientation: \(error.localizedDescription)")
+            // Handle or log the error as needed. For now, we ignore it.
         }
-    }
 }
 #endif
+
+// Custom error types for speech recognition
+
+// Lightweight speech recognizer helper using Apple's Speech framework.
+@MainActor
+final class SpeechRecognizer: ObservableObject {
+    enum SpeechRecognizerError: Error {
+        case recognitionRequestFailed
+        case recognizerUnavailable
+    }
+    
+    @Published var transcript: String = ""
+    @Published var isRecording: Bool = false
+
+    private let speechRecognizer = SFSpeechRecognizer()
+    private let audioEngine = AVAudioEngine()
+    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    private var recognitionTask: SFSpeechRecognitionTask?
+
+    func requestAuthorization() async -> Bool {
+        await withCheckedContinuation { cont in
+            SFSpeechRecognizer.requestAuthorization { status in
+                cont.resume(returning: status == .authorized)
+            }
+        }
+    }
+
+    func start() throws {
+        transcript = ""
+
+        // Prepare audio session
+        let audioSession = AVAudioSession.sharedInstance()
+        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+
+        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+        guard let recognitionRequest = recognitionRequest else { throw SpeechRecognizerError.recognitionRequestFailed }
+        recognitionRequest.shouldReportPartialResults = true
+
+        let inputNode = audioEngine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
+            guard let self = self else {
+                inputNode.removeTap(onBus: 0)
+                audioEngine.stop()
+                return
+            }
+            self.recognitionRequest?.append(buffer)
+        }
+
+        audioEngine.prepare()
+        try audioEngine.start()
+
+        isRecording = true
+
+        guard let recognizer = speechRecognizer, recognizer.isAvailable else {
+            throw SpeechRecognizerError.recognizerUnavailable
+        }
+
+        recognitionTask = recognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in @MainActor
+            guard let self = self else { return }
+            if let result = result {
+                self.transcript = result.bestTranscription.formattedString
+            }
+
+            if error != nil || (result?.isFinal ?? false) {
+                self.stop()
+            }
+        }
+    }
+
+    func stop() {
+        if audioEngine.isRunning {
+            audioEngine.inputNode.removeTap(onBus: 0)
+            audioEngine.stop()
+        }
+        recognitionRequest?.endAudio()
+        recognitionTask?.cancel()
+        recognitionRequest = nil
+        recognitionTask = nil
+
+        // Deactivate audio session to allow other apps to use audio resources
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            print("Failed to deactivate audio session: \(error)")
+        }
+
+        isRecording = false
+    }
+}
