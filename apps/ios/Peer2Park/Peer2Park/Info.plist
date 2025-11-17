@@ -5,8 +5,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We wanna listen to you so we can hear you scream with joy at the beauty of our services! PEER 2 PARK RULEZ</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>The app requires speech recognition to process audio input for features that rely on voice or sound analysis.
-</string>
+	<string>This app uses speech recognition to enable hands-free voice search for parking destinations.</string>
 	<key>API_BASE_URL</key>
 	<string>$(SRCROOT)/apps/ios/Peer2Park/Info.plist
 </string>
