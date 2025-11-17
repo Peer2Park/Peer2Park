@@ -24,6 +24,9 @@ struct MapHomeView: View {
     @State private var route: MKRoute?
     @State private var routeError: String?
 
+    @State private var selectedTravelMode: TravelMode = .drive
+    @State private var useSatelliteStyle = false
+
     @FocusState private var searchFieldFocused: Bool
 
     @State private var searchTask: Task<Void, Never>?
@@ -140,7 +143,7 @@ struct MapHomeView: View {
                     }
                 }
             }
-            .mapStyle(.standard(elevation: .realistic))
+            .mapStyle(useSatelliteStyle ? .hybrid(elevation: .realistic) : .standard(elevation: .realistic))
             .mapScope(mapScope)
             .mapControls {
                 MapUserLocationButton(scope: mapScope)
@@ -194,21 +197,33 @@ struct MapHomeView: View {
 
     @ViewBuilder
     private func overlayControls(for geometry: GeometryProxy) -> some View {
-        VStack(spacing: 0) {
-            portraitSearchChrome(for: geometry)
-            Spacer(minLength: 0)
-            bottomSheet(for: geometry)
+        ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                portraitSearchChrome(for: geometry)
+                Spacer(minLength: 0)
+                bottomSheet(for: geometry)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            VStack {
+                Spacer().frame(height: geometry.safeAreaInsets.top + 120)
+                HStack {
+                    Spacer()
+                    floatingControls
+                }
+                Spacer()
+            }
+            .padding(.trailing, 16)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func portraitSearchChrome(for geometry: GeometryProxy) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             searchField()
                 .animation(.easeInOut(duration: 0.2), value: searchFieldFocused)
                 .animation(.easeInOut(duration: 0.2), value: searchQuery)
 
-            quickFilterRow
+            travelModesStrip
 
             if let routeError {
                 Text(routeError)
@@ -233,71 +248,96 @@ struct MapHomeView: View {
     // MARK: - Search + Filters
 
     private func searchField() -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+        HStack(spacing: 12) {
+            Button {
+                // Placeholder for future drawer/menu
+            } label: {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 32, height: 32)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 9))
+            }
+            .buttonStyle(.plain)
 
-            TextField("Search destinations", text: $searchQuery)
-                .textFieldStyle(.plain)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-                .focused($searchFieldFocused)
-                .submitLabel(.search)
-                .onSubmit { triggerSearch() }
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
 
-            if !searchQuery.isEmpty {
-                Button {
-                    searchQuery = ""
-                    searchResults.removeAll()
-                    routeError = nil
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
+                TextField("Search here", text: $searchQuery)
+                    .textFieldStyle(.plain)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+                    .focused($searchFieldFocused)
+                    .submitLabel(.search)
+                    .onSubmit { triggerSearch() }
+
+                if !searchQuery.isEmpty {
+                    Button {
+                        searchQuery = ""
+                        searchResults.removeAll()
+                        routeError = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Divider()
+                    .frame(height: 20)
+
+                Button(action: triggerSearch) {
+                    Image(systemName: "mic.fill")
                         .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Clear search text")
+                .disabled(searchQuery.trimmingCharacters(in: .whitespaces).isEmpty)
             }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 28))
+            .shadow(color: .black.opacity(0.14), radius: 10, y: 6)
 
-            Button(action: triggerSearch) {
-                Image(systemName: "arrow.forward.circle.fill")
-                    .symbolRenderingMode(.hierarchical)
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.tint)
+            Button {
+                // Placeholder profile
+            } label: {
+                Circle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: 36, height: 36)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .foregroundStyle(.secondary)
+                    )
             }
-            .disabled(searchQuery.trimmingCharacters(in: .whitespaces).isEmpty)
-            .accessibilityLabel("Search for destination")
+            .buttonStyle(.plain)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .shadow(color: .black.opacity(0.18), radius: 8, y: 6)
     }
 
     private var shouldShowResultsPanel: Bool {
         route == nil && (!searchResults.isEmpty || searchInFlight)
     }
 
-    private let quickFilterOptions = [
-        "Parking near me",
-        "Covered garages",
-        "Street parking",
-        "EV chargers"
-    ]
-
-    private var quickFilterRow: some View {
+    private var travelModesStrip: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                ForEach(quickFilterOptions, id: \.self) { option in
+                ForEach(TravelMode.allCases, id: \.self) { mode in
                     Button {
-                        applyQuickSearch(option)
+                        selectedTravelMode = mode
+                        if route != nil {
+                            rebuildRoute()
+                        }
                     } label: {
-                        Text(option)
-                            .font(.footnote.weight(.semibold))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color(.systemBackground).opacity(0.85))
-                            .clipShape(Capsule())
+                        HStack(spacing: 6) {
+                            Image(systemName: mode.iconName)
+                            Text(mode.title)
+                                .font(.footnote.weight(.semibold))
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(selectedTravelMode == mode ? Color(.systemBlue).opacity(0.15) : Color(.systemBackground).opacity(0.9))
+                        .foregroundColor(selectedTravelMode == mode ? .blue : .primary)
+                        .clipShape(Capsule())
                     }
                 }
 
@@ -306,19 +346,40 @@ struct MapHomeView: View {
                         recenterCamera(on: c)
                     }
                 } label: {
-                    Label("Current location", systemImage: "location.fill")
-                        .labelStyle(.titleAndIcon)
+                    Image(systemName: "location.fill")
                         .font(.footnote.weight(.semibold))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.accentColor.opacity(0.15))
-                        .foregroundColor(.accentColor)
-                        .clipShape(Capsule())
+                        .padding(10)
+                        .background(.ultraThinMaterial, in: Circle())
                 }
                 .disabled(userCoordinate == nil)
             }
-            .padding(.horizontal, 2)
         }
+    }
+
+    private var floatingControls: some View {
+        VStack(spacing: 12) {
+            floatingCircleButton(systemName: "location.fill") {
+                if let c = userCoordinate {
+                    recenterCamera(on: c)
+                }
+            }
+
+            floatingCircleButton(systemName: useSatelliteStyle ? "globe.americas.fill" : "globe.americas") {
+                useSatelliteStyle.toggle()
+            }
+        }
+    }
+
+    private func floatingCircleButton(systemName: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 44, height: 44)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+        }
+        .buttonStyle(.plain)
     }
 
     private func searchResultsPanel(maxHeight: CGFloat) -> some View {
@@ -382,7 +443,7 @@ struct MapHomeView: View {
         }
         .padding(16)
         .frame(maxHeight: maxHeight)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
         .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
     }
 
@@ -400,12 +461,11 @@ struct MapHomeView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
                 idleSheet
-                    .transition(.opacity)
             }
         }
         .padding(20)
         .frame(maxWidth: .infinity)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 32, style: .continuous))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 32))
         .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
         .padding(.horizontal, 16)
         .padding(.bottom, geometry.safeAreaInsets.bottom + 8)
@@ -463,7 +523,6 @@ struct MapHomeView: View {
                     .foregroundStyle(.red)
                     .clipShape(RoundedRectangle(cornerRadius: 18))
             }
-            .buttonStyle(.plain)
         }
     }
 
@@ -609,12 +668,6 @@ struct MapHomeView: View {
         }
     }
 
-    private func applyQuickSearch(_ option: String) {
-        searchQuery = option
-        searchFieldFocused = false
-        triggerSearch()
-    }
-
     @MainActor
     private func performSearch(for query: String) async {
         guard let userCoordinate else {
@@ -656,16 +709,21 @@ struct MapHomeView: View {
     private func selectDestination(_ item: MKMapItem) {
         selectedDestination = item
         searchFieldFocused = false
-        buildRoute(to: item)
+        buildRoute(for: item)
     }
 
-    private func buildRoute(to item: MKMapItem) {
+    private func buildRoute(for item: MKMapItem) {
         routingInFlight = true
         routeTask?.cancel()
         routeTask = Task {
             await performRoute(to: item)
             await MainActor.run { routingInFlight = false }
         }
+    }
+
+    private func rebuildRoute() {
+        guard let destination = selectedDestination else { return }
+        buildRoute(for: destination)
     }
 
     @MainActor
@@ -678,7 +736,7 @@ struct MapHomeView: View {
         let request = MKDirections.Request()
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: userCoordinate))
         request.destination = item
-        request.transportType = .automobile
+        request.transportType = selectedTravelMode.transportType
 
         do {
             let response = try await MKDirections(request: request).calculate()
@@ -763,7 +821,47 @@ struct MapHomeView: View {
     }
 }
 
-// MARK: - MKMapRect padding
+// MARK: - Travel Mode Enum (New)
+
+private enum TravelMode: CaseIterable, Hashable {
+    case drive
+    case transit
+    case walk
+    case bike
+
+    var title: String {
+        switch self {
+        case .drive: return "Drive"
+        case .transit: return "Transit"
+        case .walk: return "Walk"
+        case .bike: return "Bike"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .drive: return "car.fill"
+        case .transit: return "tram.fill"
+        case .walk: return "figure.walk"
+        case .bike: return "bicycle"
+        }
+    }
+
+    var transportType: MKDirectionsTransportType {
+        switch self {
+        case .drive:
+            return .automobile
+        case .transit:
+            return .transit
+        case .walk:
+            return .walking
+        case .bike:
+            return .any
+        }
+    }
+}
+
+// MARK: - MKMapRect padding extension
 
 private extension MKMapRect {
     func padded(by amount: Double) -> MKMapRect {

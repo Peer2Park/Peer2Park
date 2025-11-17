@@ -10,7 +10,6 @@ import AVFoundation
 import SwiftUI
 import Vision
 import CoreML
-import ImageIO
 
 struct Detection: Identifiable {
     let id = UUID()
@@ -30,17 +29,14 @@ final class CameraManager: NSObject, ObservableObject {
     private var modelLoaded = false
     private var lastInferenceTime: CFTimeInterval = 0
     private let minInferenceInterval: CFTimeInterval = 1.0 / 15.0
-    private var currentVideoOrientation: AVCaptureVideoOrientation = .portrait
 
-    // MARK: - Initialization
     override init() {
         super.init()
         print("[CameraManager] init() – configuring session and model…")
         configureSession()
         setupVision()
     }
-    
-    // MARK: Setup Video
+
     func requestPermission() {
         print("[CameraManager] Requesting camera permission…")
         AVCaptureDevice.requestAccess(for: .video) { granted in
@@ -51,7 +47,7 @@ final class CameraManager: NSObject, ObservableObject {
             }
         }
     }
-    
+
     private func configureSession() {
         sessionQueue.async {
             self.session.beginConfiguration()
@@ -86,24 +82,16 @@ final class CameraManager: NSObject, ObservableObject {
                 self.session.addOutput(self.videoOutput)
             }
 
-            // For video output (sample buffers)
             if let conn = self.videoOutput.connection(with: .video),
                conn.isVideoOrientationSupported {
-                               conn.videoOrientation = .portrait
-                               self.currentVideoOrientation = conn.videoOrientation
-                               print("[CameraManager] 🎞️ Set videoOrientation = .portrait")
-                           }
-
-            // For preview layer
-
-
-
+                conn.videoOrientation = .portrait
+            }
 
             self.session.commitConfiguration()
             print("[CameraManager] ✅ Session configured")
         }
     }
-    // MARK: Setup Vision
+
     private func setupVision() {
         sessionQueue.async {
             guard let modelURL = Bundle.main.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
@@ -188,28 +176,11 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
         if now - lastInferenceTime < minInferenceInterval { return }
         lastInferenceTime = now
 
-        let handler = VNImageRequestHandler(
-                    cvPixelBuffer: buffer,
-                    orientation: cgImageOrientation(for: currentVideoOrientation)
-                )
+        let handler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: .up)
         do {
             try handler.perform([request])
         } catch {
             print("[CameraManager] VN handler error: \(error)")
         }
-    }
-}
-private func cgImageOrientation(for videoOrientation: AVCaptureVideoOrientation) -> CGImagePropertyOrientation {
-    switch videoOrientation {
-    case .portrait:
-        return .right
-    case .portraitUpsideDown:
-        return .left
-    case .landscapeRight:
-        return .up
-    case .landscapeLeft:
-        return .down
-    @unknown default:
-        return .right
     }
 }
