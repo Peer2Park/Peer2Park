@@ -36,17 +36,23 @@ struct MainTabView: View {
                     }
 
                     Spacer()
-
-                    if !showingCamera {
-                        controlButton(systemName: "camera.viewfinder") {
-                            showingCamera = true
-                        }
-                        .accessibilityLabel("Show camera preview")
-                    }
                 }
                 .padding()
 
                 Spacer()
+            }
+
+            if !showingCamera {
+                VStack {
+                    Spacer()
+                    controlButton(systemName: "camera.viewfinder") {
+                        showingCamera = true
+                    }
+                    .accessibilityLabel("Show camera preview")
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.trailing, 24)
             }
         }
         .onAppear {

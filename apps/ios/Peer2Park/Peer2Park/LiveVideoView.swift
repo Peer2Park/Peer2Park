@@ -12,34 +12,13 @@ struct LiveVideoView: View {
     @ObservedObject var cameraManager: CameraManager
 
     var body: some View {
-        ZStack {
-            CameraPreview(session: cameraManager.session)
-                .ignoresSafeArea()
+        GeometryReader { geo in
+            ZStack(alignment: .topLeading) {
+                CameraPreview(session: cameraManager.session)
+                    .ignoresSafeArea()
 
-            ForEach(cameraManager.yoloDetections) { detection in
-                GeometryReader { geo in
-                    let frame = detection.boundingBox
-                    let rect = CGRect(
-                        x: frame.minX * geo.size.width,
-                        y: frame.minY * geo.size.height,
-                        width: frame.width * geo.size.width,
-                        height: frame.height * geo.size.height
-                    )
-
-                    ZStack(alignment: .topLeading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.green, lineWidth: 2)
-                            .frame(width: rect.width, height: rect.height)
-                            .position(x: rect.midX, y: rect.midY)
-
-                        Text("\(detection.label) \(String(format: "%.2f", detection.confidence))")
-                            .font(.caption2)
-                            .padding(4)
-                            .background(Color.black.opacity(0.6))
-                            .foregroundColor(.white)
-                            .cornerRadius(4)
-                            .position(x: rect.minX + 6, y: rect.minY + 10)
-                    }
+                ForEach(cameraManager.yoloDetections) { detection in
+                    detectionOverlay(for: detection, in: geo.size)
                 }
             }
         }
@@ -49,5 +28,34 @@ struct LiveVideoView: View {
         .onDisappear {
             OrientationLock.unlock()
         }
+    }
+
+    @ViewBuilder
+    private func detectionOverlay(for detection: Detection, in size: CGSize) -> some View {
+        let rect = rect(for: detection.boundingBox, in: size)
+
+        ZStack(alignment: .topLeading) {
+            Path { path in
+                path.addRoundedRect(in: rect, cornerSize: CGSize(width: 8, height: 8))
+            }
+            .stroke(Color.green, style: StrokeStyle(lineWidth: 2))
+
+            let label = "\(detection.label) \(String(format: "%.0f%%", detection.confidence * 100))"
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(Color.black.opacity(0.65), in: Capsule())
+                .foregroundColor(.white)
+                .offset(x: rect.minX, y: max(rect.minY - 24, 0))
+        }
+    }
+
+    private func rect(for boundingBox: CGRect, in size: CGSize) -> CGRect {
+        let width = boundingBox.width * size.width
+        let height = boundingBox.height * size.height
+        let x = boundingBox.minX * size.width
+        let y = boundingBox.minY * size.height
+        return CGRect(x: x, y: y, width: width, height: height)
     }
 }
