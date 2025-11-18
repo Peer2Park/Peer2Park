@@ -13,66 +13,70 @@ Backend serverless API (backend/)
 This structure is guided by widely accepted iOS and AWS serverless best practices.
 
 ### 1.1 High-Level Directory Tree
+<pre>
 repo/
 ├── apps/
 │   └── ios/
-│       ├── Configs/                 # Build settings (.xcconfig)
+│       ├── Configs/                           # Build settings (.xcconfig)
 │       │   ├── Base / Debug / Beta / Release configs
 │       │
-│       ├── Peer2Park/               # Main iOS app module
-│       │   ├── App Metadata         # Info.plist, app entry point, entitlements
-│       │   ├── Assets               # App icons, colors, images
+│       ├── Peer2Park/                         # Main iOS app module
+│       │   ├── App Metadata                   # Info.plist, app entry point, entitlements
+│       │   ├── Assets                         # App icons, colors, images
 │       │   │
-│       │   ├── Views/               # SwiftUI screens + UI components
+│       │   ├── Views/                         # SwiftUI screens + UI components
 │       │   │   ├── Authentication Views
 │       │   │   ├── Map & Navigation Views
 │       │   │   ├── Camera Views
 │       │   │   └── Launch Screen storyboard
 │       │   │
-│       │   ├── Services/            # Application logic + managers
+│       │   ├── Services/                      # Application logic + managers
 │       │   │   ├── Camera service
 │       │   │   ├── Location service
 │       │   │   ├── Network service
 │       │   │   └── User session manager
 │       │   │
-│       │   ├── Models/              # Data models + CoreML model
+│       │   ├── Models/                        # Data models + CoreML model
 │       │   │   └── YOLO CoreML model package
 │       │   │
-│       │   ├── Networking (SwiftPM)/# Standalone Swift package for networking
+│       │   ├── Networking (SwiftPM)/          # Standalone Swift package for networking
 │       │   │   ├── API client code
 │       │   │   └── Unit tests
 │       │   │
-│       │   ├── Persistence          # Local storage (Core Data wrapper)
-│       │   └── Preview Content      # SwiftUI previews
+│       │   ├── Persistence                    # Local storage (Core Data wrapper)
+│       │   └── Preview Content                # SwiftUI previews
 │       │
-│       ├── Xcode/                   # Xcode project + workspace configs
+│       ├── Xcode/                             # Xcode project + workspace configs
 │       │   ├── Xcode project files
 │       │   ├── Build schemes
 │       │   └── User-specific Xcode data
 │       │
-│       ├── Tests/                   # App test modules
+│       ├── Tests/                             # App test modules
 │       │   ├── Unit tests
 │       │   └── UI tests
 │       │
-│       └── Test Plans               # .xctestplan definitions
+│       └── Test Plans                         # .xctestplan definitions
 │
 ├── backend/
-│   ├── API Spec                     # OpenAPI specification (YAML)
-│   ├── Infrastructure Templates     # AWS SAM / CloudFormation
-│   ├── Package Metadata             # package.json, tsconfig, vitest config
+│   ├── API Spec                               # OpenAPI specification (YAML)
+│   ├── Infrastructure Templates               # AWS SAM / CloudFormation
+│   ├── Package Metadata                       # package.json, tsconfig, vitest config
 │   │
 │   └── src/
-│       ├── handlers/                # Lambda handlers
+│       ├── handlers/                          # Lambda handlers
 │       │   ├── Create/update user API
 │       │   ├── Create spot API
 │       │   ├── Delete spot API
 │       │   ├── Fetch spots API
 │       │   └── Handler unit tests
 │       │
-│       └── Shared test resources    # Tokens, mocks, fixtures, etc.
+│       └── Shared test resources              # Tokens, mocks, fixtures, etc.
 │
 └── doc/
     └── repo-architecture-and-workflow.md
+</pre>
+
+
 
 ### 1.2 Architecture Rationale
 iOS Application Structure
@@ -236,3 +240,4 @@ A clean branching model tied to issues
 A controlled & review-enforced development cycle
 
 This ensures the project is professional, consistent, and ready for long-term growth.
+
